@@ -14,13 +14,13 @@ the code (with `scp` or similar) and run some command on the other side (with `s
 This is not optimal and that's the reason I created *cploy*.
 
 *Cploy* allows to mirror changes performed on a local directory to a remote
-host through SSH. A specific command (bash oneliner for example) can be run
+host through SSH. A specific command (bash one-liner for example) can be run
 after any change for example to trigger a build.
 
 Features:
 
   * handle multiple syncs in parallel
-  * sync is done through SSH
+  * secure sync through SSH
   * can be daemonized
   * allows to provide a specific command to run on each local change
   * allows to exclude some files from sync
@@ -129,20 +129,22 @@ the SSH agent, different port, different username, etc.
 
 Besides using the above options, The *<hostname>* argument can also be
 provided using a format similar to what the SSH client provides:
-*<username>@<hostname>:<port>*.
+```
+<username>@<hostname>:<port>
+```
 
 ## Talking with the daemon
 
 A few commands are available to talk to the daemon:
 
-* *start*: start the daemon
-* *stop*: stop the daemon
-* *restart*: stop and then start the daemon
-* *info*: get a list of current tasks
-* *ping*: ping the daemon
-* *debug*: toggle debug flag
-* *unsync*: stop syncing a specific task
-* *resync*: do a full sync starting from local of the sync'ed directory
+* **start**: start the daemon
+* **stop**: stop the daemon
+* **restart**: stop and then start the daemon
+* **info**: get a list of current tasks
+* **ping**: ping the daemon
+* **debug**: toggle debug flag
+* **unsync**: stop syncing a specific task
+* **resync**: do a full sync starting from local of the sync'ed directory
 
 If you prefer not to use the daemon, it can also be run in the foreground
 by using the `--front` switch.
@@ -166,7 +168,7 @@ Exclude any files containing *test*
 
 This hasn't been extensively tested so please do report any bug you find.
 Starting the daemon with `--debug` is always helpful to get more info
-(or toggle it with the daemon command *debug*).
+(or toggle it with the daemon command `debug`).
 
 # Contribution
 
