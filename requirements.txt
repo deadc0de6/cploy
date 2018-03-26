@@ -1,0 +1,4 @@
+docopt; python_version >= '3.0'
+paramiko; python_version >= '3.0'
+pyinotify; python_version >= '3.0'
+python-daemon; python_version >= '3.0'

@@ -1,0 +1,27 @@
+seqdiag {
+
+  default_note_color = lightblue;
+  default_fontsize = 16;
+
+  cploy;manager;fsmon;worker;fsmon;com;
+
+  cploy -> manager [label = "create/start manager"];
+           manager -> manager [label = "process actions"];
+           manager => task [label = "create new task", return = "task"];
+           manager => sftp [label = "create sftp connection", return = "sftp"];
+           manager -> worker [label = "start worker thread", rightnote = "(task, sftp)"];
+           manager -> com [label = "start listening socket", rightnote = "(callback)"];
+
+  worker => fsmon [label = "start threaded filesystem monitoring"];
+
+  worker <<-- fsmon [label = "fs change triggers event"];
+  worker => sftp [label = "apply change on remote"];
+
+  worker <<-- fsmon [label = "fs change triggers event"];
+  worker => sftp [label = "apply change on remote"];
+
+  com -->> manager [label = "process new message through callback"];
+  com <-- manager
+  com -->> manager [label = "process new message through callback"];
+  com <-- manager
+}
