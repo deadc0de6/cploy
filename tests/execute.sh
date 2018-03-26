@@ -35,7 +35,7 @@ python3 -m cploy.cploy daemon stop
 
 [ ! -e ${dst} ] && echo "ERROR file not synced" && exit 1
 # expect two changes for a file creation thus test+test
-[ "`cat ${dst}`" != "testtest" ] && echo "ERROR command not executed" && exit 1
+[ "`cat ${dst}`" != "testtest" ] && tail -n 50 /tmp/cploy/cploy.log && echo "ERROR command not executed" && exit 1
 
 echo "[===] ok"
 exit 0
