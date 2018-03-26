@@ -13,7 +13,7 @@ sudo start ssh
 # create ssh key
 ssh-keygen -q -t rsa -f "${keydst}" -N "${passphrase}"
 # add key to authorized keys
-cat "${keydst}" >> "${auth}"
+cat "${keydst}.pub" >> "${auth}"
 # trust host
 ssh-keyscan -t rsa localhost >> ${known}
 # ensure key is used
