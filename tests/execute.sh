@@ -4,6 +4,7 @@
 
 set -ev
 
+key="-k ~/.ssh/id_rsa"
 opt="--debug"
 l=`mktemp -d --suffix=.cploy`
 r=`mktemp -d --suffix=.cploy`
@@ -13,7 +14,7 @@ echo "[===] TEST command execution"
 python3 -m cploy.cploy daemon ${opt} start
 [ "$?" != "0" ] && echo "ERROR daemon start" && exit 1
 
-python3 -m cploy.cploy sync ${opt} --force ${l} localhost ${r} --command="echo -n test >> ${dst}"
+python3 -m cploy.cploy sync ${opt} ${key} --force ${l} localhost ${r} --command="echo -n test >> ${dst}"
 [ "$?" != "0" ] && echo "ERROR sync" && exit 1
 
 python3 -m cploy.cploy daemon info

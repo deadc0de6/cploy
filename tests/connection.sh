@@ -4,8 +4,8 @@
 
 set -v
 
-opt=""
-opt="--debug"
+key="-k ~/.ssh/id_rsa"
+opt="--debug ${key}"
 t=`mktemp -d --suffix=.cploy`
 r=`mktemp -d --suffix=.cploy`
 
