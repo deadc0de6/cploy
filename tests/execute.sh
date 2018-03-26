@@ -2,6 +2,14 @@
 # author: deadc0de6 (https://github.com/deadc0de6)
 # Copyright (c) 2018, deadc0de6
 
+get_logs()
+{
+  log="/tmp/cploy/cploy.log"
+  if [ -e ${log} ]; then
+    tail -n 50 ${log}
+  fi
+}
+
 set -ev
 
 key="-k ~/.ssh/id_rsa"
@@ -25,7 +33,7 @@ touch ${l}/test
 sleep 1
 
 # test remote file is sync'ed
-[ ! -e "${r}/test" ] && echo "ERROR file sync" && exit 1
+[ ! -e "${r}/test" ] && get_logs && echo "ERROR file sync" && exit 1
 
 python3 -m cploy.cploy daemon info
 [ "$?" != "0" ] && echo "ERROR daemon info 2" && exit 1
@@ -35,7 +43,7 @@ python3 -m cploy.cploy daemon stop
 
 [ ! -e ${dst} ] && echo "ERROR file not synced" && exit 1
 # expect two changes for a file creation thus test+test
-[ "`cat ${dst}`" != "testtest" ] && tail -n 50 /tmp/cploy/cploy.log && echo "ERROR command not executed" && exit 1
+[ "`cat ${dst}`" != "testtest" ] && get_logs && echo "ERROR command not executed" && exit 1
 
 echo "[===] ok"
 exit 0
