@@ -44,7 +44,7 @@ class Task:
             if self.PORT_SEP in self.hostname:
                 self.port = int(self.hostname.split(self.PORT_SEP)[1])
                 self.hostname = self.hostname.split(self.PORT_SEP)[0]
-        self.key = args['--key']
+        self.key = os.path.expanduser(args['--key'])
         self.keypass = args['--keypass']
         self.password = args['--pass']
         self.exclude = args['--exclude']
