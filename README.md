@@ -1,5 +1,7 @@
 # CPLOY
 
+[![PyPI version](https://badge.fury.io/py/cploy.svg)](https://badge.fury.io/py/cploy)
+[![Python](https://img.shields.io/pypi/pyversions/cploy.svg)](https://pypi.python.org/pypi/cploy)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
 *The ad hoc continuous deployment solution for developers*
