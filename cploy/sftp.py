@@ -34,7 +34,8 @@ class Sftp:
 
     def connect(self):
         ''' connect on remote through sftp '''
-        if self.trans and trans.is_authenticated():
+        self._debug('initiate connection ...')
+        if self.trans and self.trans.is_authenticated():
             return
         if not self._verif_hostkey(self.task.hostname):
             err = 'hostkey verification failed'
@@ -42,6 +43,7 @@ class Sftp:
             raise ConnectionException(err)
         trans = self._connect()
         if not trans.is_authenticated():
+            self.close()
             err = 'cannot authenticate'
             self._err(err)
             raise ConnectionException(err)
@@ -58,7 +60,9 @@ class Sftp:
             err = 'remote path exists (use --force)'
             self._err(err)
             raise SyncException(err)
+
         if not self.exists(self.task.remote):
+            self._debug('create remote directory')
             self.mkdirp(self.task.remote)
 
     def _con_key(self):
