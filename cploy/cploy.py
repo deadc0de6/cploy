@@ -43,9 +43,8 @@ def daemon_send(data, debug, quiet=False):
         msg = s.send(data)
     except Exception as e:
         if not quiet:
-            Log.err(e)
-            Log.info('communication was interrupted')
-            Log.info('check daemon status')
+            Log.log('communication failed')
+            Log.log('check daemon status')
         return False
     if not msg:
         if not quiet:
@@ -199,7 +198,7 @@ def main():
             ret = start_manager(args, debug, actions=[action])
         else:
             if not pid:
-                Log.log('starting manager in background ...')
+                Log.log('starting manager in background and adding task')
                 daemonize(args, debug, actions=[action])
             else:
                 Log.log('manager already running ... sending new task')
