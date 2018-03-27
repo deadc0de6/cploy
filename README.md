@@ -220,7 +220,8 @@ The provided command will be run on the remote anytime a change
 is applied on the local monitored directory.
 
 *Cploy* uses paramiko [exec\_command](http://docs.paramiko.org/en/2.4/api/client.html)
-to execute the command which will be run from the default directory of the user.
+to execute the command which will be run from the default directory of the user
+(usually $HOME).
 
 Therefore if the remote directory is `/tmp/remote` and the script to
 run remotely is located in `/tmp/remote/test.sh`, the command argument
