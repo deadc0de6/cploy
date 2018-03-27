@@ -61,6 +61,8 @@ class Com:
             self._debug('sending \"{}\"'.format(msg))
             self._snd(sock, msg, timeout=timeout)
             data = self._rcv(sock, timeout=timeout)
+        except KeyboardInterrupt:
+            raise ComException('Interrupted by user')
         except Exception as e:
             raise ComException(e)
         finally:

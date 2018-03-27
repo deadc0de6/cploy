@@ -29,8 +29,7 @@ DIRPATH = '/tmp/{}'.format(BANNER)
 PIDPATH = '{}/{}.pid'.format(DIRPATH, BANNER)
 LOGPATH = '{}/{}.log'.format(DIRPATH, BANNER)
 SPATH = '{}/{}.socket'.format(DIRPATH, BANNER)
-MAXWAIT = 5  # seconds
-STIMEOUT = 15  # seconds
+MAXWAIT = 15  # seconds
 
 
 def daemon_send(data, debug, quiet=False):
@@ -41,10 +40,12 @@ def daemon_send(data, debug, quiet=False):
         return False
     s = Com(SPATH, debug=debug)
     try:
-        msg = s.send(data, timeout=STIMEOUT)
+        msg = s.send(data)
     except Exception as e:
         if not quiet:
             Log.err(e)
+            Log.info('communication was interrupted')
+            Log.info('check daemon status')
         return False
     if not msg:
         if not quiet:
@@ -132,7 +133,7 @@ def wait_for_stop(debug):
     ''' wait for daemon to stop '''
     start = datetime.datetime.now()
     if debug:
-        Log.debug('waiting for pidfile to disappear ...')
+        Log.debug('waiting max {}s for manager to stop'.format(MAXWAIT))
     while get_pid(PIDPATH):
         time.sleep(1)
         end = datetime.datetime.now()
