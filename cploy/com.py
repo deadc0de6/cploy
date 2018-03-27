@@ -199,8 +199,6 @@ class Com:
             if self.debug:
                 Log.debug('send timeout')
             raise ComException('snd timeout')
-        if self.debug:
-            Log.debug('send select {} {}'.format(w, e))
         try:
             for wsock in w:
                 if wsock != socket:

@@ -150,7 +150,7 @@ def get_pid(path):
         return None
     lock = pidlockfile.PIDLockFile(path, threaded=False)
     if lock.is_locked():
-        return open(path, 'r').read()
+        return open(path, 'r').read().rstrip()
     return None
 
 
