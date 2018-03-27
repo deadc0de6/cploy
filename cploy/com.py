@@ -155,7 +155,6 @@ class Com:
             finally:
                 # Clean up the connection
                 conn.close()
-        self._clean()
 
     def _rcv(self, socket, timeout=None):
         ''' timeout aware socket '''

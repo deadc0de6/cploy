@@ -6,6 +6,7 @@ The ad hoc continuous deployment tool
 
 import sys
 import os
+import json
 from docopt import docopt
 import daemon
 import signal
@@ -176,13 +177,36 @@ def argv_to_str(argv):
     return ' '.join(["'"+a+"'" if ' ' in a else a for a in argv])
 
 
+def fix_path(path):
+    if not path:
+        return path
+    path = os.path.expanduser(path)
+    path = os.path.abspath(path)
+    return path
+
+
+def fix_args(args):
+    ''' fix local path '''
+    args['<local_path>'] = fix_path(args['<local_path>'])
+    args['--key'] = fix_path(args['--key'])
+    return args
+
+
+def get_action(args):
+    ''' return serialized arguments '''
+    args['cli'] = argv_to_str(sys.argv[1:])
+    return json.dumps(args)
+
+
 def main():
     ''' entry point '''
     ret = True
     args = docopt(USAGE, version=VERSION)
+    args = fix_args(args)
     front = args['--front']
     debug = args['--debug']
-    action = argv_to_str(sys.argv[1:])
+
+    action = get_action(args)
     pid = get_pid(PIDPATH)
 
     if not os.path.exists(DIRPATH):

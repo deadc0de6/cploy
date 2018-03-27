@@ -7,6 +7,7 @@ Manager sitting between workers and the communication medium
 import threading
 import queue
 import time
+import json
 
 # local imports
 from cploy.log import Log
@@ -49,13 +50,14 @@ class Manager:
         msg = Msg.ack
         try:
             for action in actions:
+                action = json.loads(action)
                 if not action:
                     continue
                 if self.debug:
-                    Log.debug('executing action: {}'.format(action))
+                    Log.debug('executing action: \"{}\"'.format(action['cli']))
                 self._work(action)
                 if self.debug:
-                    Log.debug('task successfully started: {}'.format(action))
+                    Log.debug('task started: \"{}\"'.format(action['cli']))
         except Exception as e:
             msg = str(e)
         return msg
@@ -140,7 +142,7 @@ class Manager:
     def _work(self, args):
         ''' launch the syncing '''
         if self.debug:
-            Log.debug('creating task: \"{}\"'.format(args))
+            Log.debug('creating task: \"{}\"'.format(args['cli']))
         try:
             task = Task(args)
         except SyncException as e:

@@ -83,6 +83,7 @@ class Worker:
 
     def _norm(self, path):
         ''' normalize the path '''
+        path = os.path.normpath(path)
         return os.path.expanduser(path)
 
     def _get_remotepath(self, abspath):
