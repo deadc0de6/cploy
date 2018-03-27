@@ -45,7 +45,6 @@ see [usage](#usage) for more info
 * [Usage](#usage)
 
   * [Adding a task](#adding-a-task)
-  * [Remote command execution](#remote-command-execution)
   * [Talking with the daemon](#talking-with-the-daemon)
   * [Exclusion](#exclusion)
   * [Sync events](#sync-events)
