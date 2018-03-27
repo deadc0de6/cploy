@@ -15,6 +15,7 @@ from cploy.sftp import Sftp
 from cploy.worker import Worker
 from cploy.com import Com
 from cploy.message import Message as Msg
+from cploy.exceptions import *
 
 
 class Manager:
@@ -35,10 +36,8 @@ class Manager:
     def start(self, actions=[]):
         ''' start the manager '''
         if actions:
-            try:
-                self._process_actions(actions)
-            except Exception as e:
-                Log.err('error starting task: {}'.format(e))
+            msg = self._process_actions(actions)
+            if not msg == Msg.ack:
                 return False
         if self.debug:
             Log.debug('starting communication ...')
@@ -47,20 +46,32 @@ class Manager:
 
     def _process_actions(self, actions):
         ''' process all actions in list '''
-        for action in actions:
-            if not action:
-                continue
-            if self.debug:
-                Log.debug('executing action: {}'.format(action))
-            self._work(action)
-            if self.debug:
-                Log.debug('task successfully started: {}'.format(action))
+        msg = Msg.ack
+        try:
+            for action in actions:
+                if not action:
+                    continue
+                if self.debug:
+                    Log.debug('executing action: {}'.format(action))
+                self._work(action)
+                if self.debug:
+                    Log.debug('task successfully started: {}'.format(action))
+        except SyncException as e:
+            Log.err('error starting task - se: {}'.format(e.msg))
+            msg = e.msg
+        except ConnectionException as e:
+            Log.err('error starting task - ce: {}'.format(e.msg))
+            msg = e.msg
+        except Exception as e:
+            Log.err('error starting task: {}'.format(e))
+            msg = str(e)
+        return msg
 
     def callback(self, action):
         ''' process command received through the communication thread '''
         msg = Msg.ack
         if self.debug:
-            Log.debug('received message: \"{}\"'.format(action))
+            Log.debug('callback received message: \"{}\"'.format(action))
 
         if action == Msg.stop:
             self.stopreq.set()
@@ -81,11 +92,7 @@ class Manager:
                 t = next((x for x in self.lthreads if x.id == id), None)
                 t.queue.put(Msg.resync)
         else:
-            try:
-                self._process_actions([action])
-            except Exception as e:
-                Log.err('error starting task: {}'.format(e))
-                msg = e.msg
+            msg = self._process_actions([action])
         return msg
 
     def get_info(self):
@@ -139,16 +146,16 @@ class Manager:
 
     def _work(self, args):
         ''' launch the syncing '''
+        if self.debug:
+            Log.debug('creating task: \"{}\"'.format(args))
         task = Task(args)
 
-        if self.debug:
-            Log.debug('connecting with sftp')
+        Log.log('connecting with sftp')
         sftp = Sftp(task, self.threadid, debug=self.debug)
         sftp.connect()
 
         # try to do first sync
-        if self.debug:
-            Log.debug('init sync initiated')
+        Log.log('first sync initiated')
         if not sftp.initsync(task.local, task.remote):
             sftp.close()
             err = 'unable to sync dir'
@@ -158,6 +165,8 @@ class Manager:
         inq = queue.Queue()
 
         # create the thread worker
+        if self.debug:
+            Log.debug('create worker')
         worker = Worker(task, sftp, inq,
                         self.rqueue, debug=self.debug,
                         force=task.force)
@@ -165,10 +174,13 @@ class Manager:
         t = threading.Thread(target=worker.start, args=args)
 
         # record this thread
-        self.lthreads.append(Lthread(t, self.threadid, inq))
+        lt = Lthread(t, self.threadid, inq)
+        self.lthreads.append(lt)
         self.threadid += 1
 
         # start the thread
+        if self.debug:
+            Log.debug('start thread {}'.format(lt.id))
         t.start()
 
 
