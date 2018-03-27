@@ -87,8 +87,8 @@ class Com:
         try:
             msg = callback(data)
         except Exception as e:
-            Log.err('error starting task: {}'.format(e))
-        self._debug('sending message back: {}'.format(msg))
+            Log.err('starting task failed: {}'.format(e))
+        self._debug('sending message back: \"{}\"'.format(msg))
         if msg:
             try:
                 self._snd(conn, msg, timeout=self.TIMEOUT)
