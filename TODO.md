@@ -11,4 +11,6 @@ TODO
   * remove the need to prepend "daemon" in daemon commands
   * handle command return stuff
   * default dir for command should be the sync dir
+  * add daemon command to get logs
+  * improve com protocol with size
 
