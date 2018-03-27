@@ -48,6 +48,7 @@ see [usage](#usage) for more info
   * [Talking with the daemon](#talking-with-the-daemon)
   * [Exclusion](#exclusion)
   * [Sync events](#sync-events)
+  * [Run a command on change](#run-a-command-on-change)
 
 * [Contribution](#contribution)
 
@@ -94,7 +95,7 @@ Start the daemon
 $ cploy daemon start --debug
 ```
 
-and then add tasks to it:
+and then add a task to it:
 ```bash
 # sync dir /tmp/local on localhost to
 # /tmp/remote on host "somehost"
@@ -147,7 +148,11 @@ provided using a compact format similar to what the SSH client provides:
 
 After adding a task, make sure to check the daemon to see if the task has
 been added successfully with `cploy daemon info`. In case it wasn't, checking
-the logs in `/tmp/cploy/cploy.log` that usually allows to identify the issue.
+the logs in `/tmp/cploy/cploy.log` usually allows to identify the issue.
+
+Once a new task is added, *cploy* will start by copying any local existing files to
+the remote directory to initiate the mirror. Then, any change to the local directory
+is applied on the remote.
 
 Requirements:
 
@@ -169,8 +174,8 @@ A few commands are available to talk to the daemon:
 * **unsync**: stop syncing a specific task
 * **resync**: do a full sync starting from local of the sync'ed directory
 
-If you prefer not to use the daemon, it can also be run in the foreground
-by using the `--front` switch.
+If you prefer not to use the daemon, *cploy*'s daemon can also be run in the foreground
+by using the `--front` switch. However only a single task can be added to it then.
 
 Getting information from the daemon allows to see the different task
 running and their id:
@@ -184,12 +189,12 @@ $ cploy daemon info
 Files can be excluded within the monitored directory by using `--exclude`.
 Matching is done using [fnmatch](https://docs.python.org/3.4/library/fnmatch.html).
 
-Exclude any hidden files:
+Example: exclude any hidden files:
 ```
 --exclude '*/.*'
 ```
 
-Exclude any files containing *test*
+Example: exclude any files containing *test*
 ```
 --exclude '*/test*'
 ```
@@ -207,6 +212,22 @@ Here is a list of changes that are sync'ed:
 ## Monitor the changes
 
 If the daemon is running, logs are written in `/tmp/cploy/cploy.log`.
+
+## Run a command on change
+
+A command can be added to a task using the `--command` switch.
+The provided command will be run on the remote anytime a change
+is applied on the local monitored directory.
+
+*Cploy* uses paramiko [exec\_command](http://docs.paramiko.org/en/2.4/api/client.html)
+to execute the command which will be run from the default directory of the user.
+
+Therefore if the remote directory is `/tmp/remote` and the script to
+run remotely is located in `/tmp/remote/test.sh`, the command argument
+will be `--command="/tmp/remote/test.sh"`.
+
+Currently the specified command is run on any change with no control
+over the granularity.
 
 # Issues and bugs
 
