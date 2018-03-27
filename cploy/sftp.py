@@ -18,6 +18,7 @@ from cploy.exceptions import *
 class Sftp:
 
     KNOWNHOSTS = '~/.ssh/known_hosts'
+    BUFSZ = 1024
 
     def __init__(self, task, id, debug=False):
         self.task = task
@@ -61,7 +62,8 @@ class Sftp:
         # adapt remote path with sftp
         self.task.remote = self.sftp.normalize(self.task.remote)
         if self.debug:
-            Log.debug('{} remote path translated to {}'.format(self.id, self.task.remote))
+            Log.debug('{} rpath adapted to {}'.format(self.id,
+                                                      self.task.remote))
 
         if self.exists(self.task.remote) and not self.task.force:
             self.close()
@@ -336,6 +338,18 @@ class Sftp:
         # chd = 'cd {}'.format(self.task.remote)
         # channel.exec_command(chd)
         channel.exec_command(cmd)
+        ret = channel.recv_exit_status()
+        if self.debug:
+            Log.debug('{} command returned: {}'.format(self.id, ret))
+        if ret == 0:
+            try:
+                data = channel.recv(self.BUFSZ).decode()
+                Log.log('{} command stdout: \n{}'.format(self.id, data))
+            except socket.timeout as e:
+                pass
+        else:
+            Log.log('{} command returned error: {}'.format(self.id, ret))
+        channel.close()
         return True
 
     ###########################################################
