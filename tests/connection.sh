@@ -5,6 +5,7 @@
 set -v
 
 key="-k ~/.ssh/id_rsa"
+[ "$1" != "" ] && [ -e "$1" ] && key="-k $1"
 opt="--debug ${key}"
 t=`mktemp -d --suffix=.cploy`
 r=`mktemp -d --suffix=.cploy`

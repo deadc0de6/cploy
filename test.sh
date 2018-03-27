@@ -9,6 +9,9 @@
 # stop on first error
 set -ev
 
+key="~/.ssh/id_rsa"
+[ "$1" != "" ] && [ -e "$1" ] && key="$1"
+
 pycodestyle cploy/
 pycodestyle tests/
 
@@ -16,7 +19,7 @@ echo "=========================================================="
 tests/daemon.sh
 
 echo "=========================================================="
-tests/connection.sh
+tests/connection.sh ${key}
 
 echo "=========================================================="
-tests/execute.sh
+tests/execute.sh ${key}
