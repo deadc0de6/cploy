@@ -85,8 +85,7 @@ class Worker:
 
     def _norm(self, path):
         ''' normalize the path '''
-        p = os.path.abspath(path)
-        return os.path.expanduser(p)
+        return os.path.expanduser(path)
 
     def _get_remotepath(self, abspath):
         ''' get final path on remote based on local path '''

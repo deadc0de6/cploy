@@ -23,7 +23,6 @@ class Task:
 
     def _norm(self, path):
         ''' normalize local path '''
-        path = os.path.abspath(path)
         return os.path.expanduser(path)
 
     def _parse(self, args):
@@ -44,7 +43,9 @@ class Task:
             if self.PORT_SEP in self.hostname:
                 self.port = int(self.hostname.split(self.PORT_SEP)[1])
                 self.hostname = self.hostname.split(self.PORT_SEP)[0]
-        self.key = os.path.expanduser(args['--key'])
+        self.key = args['--key']
+        if self.key:
+            self.key = self._norm(args['--key'])
         self.keypass = args['--keypass']
         self.password = args['--pass']
         self.exclude = args['--exclude']
