@@ -8,6 +8,7 @@ import socket
 import select
 import sys
 import os
+import struct
 
 # local import
 from cploy.log import Log
@@ -19,6 +20,7 @@ class Com:
 
     BUFSZ = 1024
     TIMEOUT = 5
+    SZLEN = 4
 
     def __init__(self, path, debug=False):
         self.path = path
@@ -67,6 +69,7 @@ class Com:
         except KeyboardInterrupt:
             raise ComException('Interrupted by user')
         except Exception as e:
+            Log.err('error when sending message: {}'.format(e))
             raise ComException(e)
         finally:
             sock.close()
@@ -170,7 +173,16 @@ class Com:
                     continue
                 if self.debug:
                     Log.debug('receiving data ...')
-                data = rsock.recv(self.BUFSZ).decode()
+                data = ''
+                blen = rsock.recv(self.SZLEN)
+                if not blen:
+                    if self.debug:
+                        Log.debug('nothing received')
+                    continue
+                length = struct.unpack('>I', blen)[0]
+                while len(data) < length:
+                    data += rsock.recv(self.BUFSZ).decode()
+
             for rsock in e:
                 if rsock != socket:
                     continue
@@ -195,7 +207,8 @@ class Com:
                     continue
                 if self.debug:
                     Log.debug('sending data ...')
-                wsock.sendall(data.encode())
+                raw = struct.pack('>I', len(data)) + data.encode()
+                wsock.sendall(raw)
             for wsock in e:
                 if wsock != socket:
                     continue
