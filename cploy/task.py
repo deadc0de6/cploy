@@ -44,3 +44,11 @@ class Task:
         self.password = args['--pass']
         self.exclude = args['--exclude']
         self.command = args['--command']
+
+    def hash(self):
+        ''' create hash of this sync '''
+        check = hash(self.local)
+        check ^= hash(self.remote)
+        check ^= hash(self.username)
+        check ^= hash(self.hostname)
+        return check

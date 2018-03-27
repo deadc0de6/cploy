@@ -194,7 +194,7 @@ def fix_args(args):
 
 def get_action(args):
     ''' return serialized arguments '''
-    args['cli'] = argv_to_str(sys.argv[1:])
+    args['cli'] = argv_to_str(sys.argv[1:]).rstrip()
     return json.dumps(args)
 
 

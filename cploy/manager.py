@@ -32,6 +32,7 @@ class Manager:
         self.stopreq = threading.Event()
         self.sockthread = None
         self.lthreads = []
+        self.hashes = []
         self.rqueue = queue.Queue()
 
     def start(self, actions=[]):
@@ -148,6 +149,11 @@ class Manager:
         except SyncException as e:
             Log.err('error creating task: {}'.format(e.msg))
             raise e
+        check = task.hash()
+        if check in self.hashes:
+            Log.err('sync already being done')
+            raise SyncException('duplicate of existing sync')
+        self.hashes.append(check)
 
         Log.log('connecting with sftp')
         sftp = Sftp(task, self.threadid, debug=self.debug)
