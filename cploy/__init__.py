@@ -11,6 +11,7 @@ __version__ = '0.1'
 
 __usage__ = '''
 {0}
+
 Usage:
     {0} sync [-dfF] [-p <port>] [-u <user>] [-P <pass>]
         [-k <key>] [-K <pass>] [-c <cmd>] [-e <pattern>...]
