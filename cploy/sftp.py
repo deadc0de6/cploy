@@ -17,7 +17,6 @@ from cploy.exceptions import *
 
 class Sftp:
 
-    CWD = '.'
     KNOWNHOSTS = '~/.ssh/known_hosts'
 
     def __init__(self, task, id, debug=False):
@@ -58,6 +57,12 @@ class Sftp:
             err = 'local path does not exist'
             self._err(err)
             raise SyncException(err)
+
+        # adapt remote path with sftp
+        self.task.remote = self.sftp.normalize(self.task.remote)
+        if self.debug:
+            Log.debug('{} remote path translated to {}'.format(self.id, self.task.remote))
+
         if self.exists(self.task.remote) and not self.task.force:
             self.close()
             err = 'remote path exists (use --force)'
@@ -73,6 +78,8 @@ class Sftp:
         if self.debug:
             Log.debug('{} chdir to \"{}\"'.format(self.id, self.task.remote))
         self.sftp.chdir(self.task.remote)
+        if self.debug:
+            Log.debug('{} cwd: {}'.format(self.id, self.sftp.normalize('.')))
 
     def _con_key(self):
         ''' connect using provided key '''
