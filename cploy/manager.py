@@ -82,6 +82,7 @@ class Manager:
                 t = next((x for x in self.lthreads if x.id == id), None)
                 self._stop_thread(t)
             msg = self.get_info()
+            self.hashes.remove(t.task.hash())
         elif action.startswith(Msg.resync):
             id = int(action.split()[1])
             if id < self.threadid:
@@ -187,7 +188,7 @@ class Manager:
         t = threading.Thread(target=worker.start, args=args)
 
         # record this thread
-        lt = Lthread(t, self.threadid, inq)
+        lt = Lthread(t, self.threadid, inq, task)
         self.lthreads.append(lt)
         self.threadid += 1
 
@@ -199,7 +200,8 @@ class Manager:
 
 class Lthread:
 
-    def __init__(self, thread, id, queue):
+    def __init__(self, thread, id, queue, task):
         self.thread = thread
         self.id = id
         self.queue = queue
+        self.task = task
