@@ -44,6 +44,8 @@ see [usage](#usage) for more info
 * [Installation](#installation)
 * [Usage](#usage)
 
+  * [Connection](#connection)
+  * [Remote path](#remote-path)
   * [Adding a task](#adding-a-task)
   * [Talking with the daemon](#talking-with-the-daemon)
   * [Exclusion](#exclusion)
@@ -134,7 +136,7 @@ Options:
     -h --help                 Show this screen.
 ```
 
-## Adding a task
+## Connection
 
 Connections to a remote hosts is done using SFTP (SSH). Multiple
 options can be changed: connection with password, with SSH keys, using
@@ -145,6 +147,18 @@ provided using a compact format similar to what the SSH client provides:
 ```
 <username>@<hostname>:<port>
 ```
+
+## Remote path
+
+The `<remote_path>` is normalized based on the default user's directory
+(usually `$HOME`). For example `../../tmp/test` would
+result in `/tmp/test` if the user's home is `/home/user`.
+Note that shell expansion is not performed on remote path (like `~` for example)
+neither are environment variables (like `$HOME`).
+
+## Adding a task
+
+Tasks can be added by using the `sync` command.
 
 After adding a task, make sure to check the daemon to see if the task has
 been added successfully with `cploy daemon info`. In case it wasn't, checking
@@ -209,19 +223,16 @@ Here is a list of changes that are sync'ed:
 * File content modification
 * File move
 
-## Monitor the changes
-
-If the daemon is running, logs are written in `/tmp/cploy/cploy.log`.
-
 ## Run a command on change
 
 A command can be added to a task using the `--command` switch.
 The provided command will be run on the remote anytime a change
 is applied on the local monitored directory.
 
-*Cploy* uses paramiko [exec\_command](http://docs.paramiko.org/en/2.4/api/client.html)
+*Cploy* uses paramiko channel's
+[exec\_command](http://docs.paramiko.org/en/2.4/api/channel.html#paramiko.channel.Channel)
 to execute the command which will be run from the default directory of the user
-(usually $HOME).
+(usually `$HOME`).
 
 Therefore if the remote directory is `/tmp/remote` and the script to
 run remotely is located in `/tmp/remote/test.sh`, the command argument
