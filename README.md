@@ -151,9 +151,10 @@ provided using a compact format similar to what the SSH client provides:
 ## Remote path
 
 The `<remote_path>` is normalized based on the default user's directory
-(usually `$HOME`). For example `../../tmp/test` would
-result in `/tmp/test` if the user's home is `/home/user`.
-Note that shell expansion is not performed on remote path (like `~` for example)
+on the remote (usually `$HOME`). For example `../../tmp/test` would
+result in `/tmp/test` if the remote user's home is `/home/user`.
+
+Note that shell expansions are not performed on remote paths (like `~` for example)
 neither are environment variables (like `$HOME`).
 
 ## Adding a task
@@ -177,7 +178,8 @@ Requirements:
 
 ## Talking with the daemon
 
-A few commands are available to talk to the daemon:
+A few commands are available to talk to the daemon with the
+`daemon` command:
 
 * **start**: start the daemon
 * **stop**: stop the daemon
@@ -200,10 +202,11 @@ $ cploy daemon info
 
 ## Exclusion
 
-Files can be excluded within the monitored directory by using `--exclude`.
+Files can be excluded from the sync in the monitored directory by using
+the `--exclude` switch.
 Matching is done using [fnmatch](https://docs.python.org/3.4/library/fnmatch.html).
 
-Example: exclude any hidden files:
+Example: exclude any hidden files
 ```
 --exclude '*/.*'
 ```
@@ -215,7 +218,7 @@ Example: exclude any files containing *test*
 
 ## Sync events
 
-Here is a list of changes that are sync'ed:
+Here is a list of changes that are mirrored on the remote:
 
 * File creation
 * File deletion
