@@ -31,7 +31,8 @@ class Com:
         try:
             self._listen(callback)
         except KeyboardInterrupt:
-            self._debug('interrupted')
+            if self.debug:
+                Log.debug('interrupted')
         finally:
             self._clean()
 
@@ -41,7 +42,8 @@ class Com:
 
     def ping(self):
         ''' ping through unix socket '''
-        self._debug('pinging')
+        if self.debug:
+            Log.debug('pinging')
         return self.send(Msg.ping)
 
     def send(self, msg, timeout=None):
@@ -58,7 +60,8 @@ class Com:
             raise ComException(e)
 
         try:
-            self._debug('sending \"{}\"'.format(msg))
+            if self.debug:
+                Log.debug('sending \"{}\"'.format(msg))
             self._snd(sock, msg, timeout=timeout)
             data = self._rcv(sock, timeout=timeout)
         except KeyboardInterrupt:
@@ -68,16 +71,19 @@ class Com:
         finally:
             sock.close()
 
-        self._debug('receiving \"{}\"'.format(data))
+        if self.debug:
+            Log.debug('receiving \"{}\"'.format(data))
         return data
 
     def _clean(self):
         ''' clean socket '''
-        self._debug('cleaning socket')
+        if self.debug:
+            Log.debug('cleaning socket')
         if self.sock:
             self.sock.close()
         if os.path.exists(self.path):
-            self._debug('removing socket file {}'.format(self.path))
+            if self.debug:
+                Log.debug('removing socket file {}'.format(self.path))
             os.remove(self.path)
 
     def _process_msg(self, conn, callback, data):
@@ -85,29 +91,33 @@ class Com:
         if not data:
             return
         msg = ''
-        self._debug('data received: {}'.format(data))
+        if self.debug:
+            Log.debug('data received: {}'.format(data))
         try:
             msg = callback(data)
         except Exception as e:
             Log.err('starting task failed: {}'.format(e))
-        self._debug('sending message back: \"{}\"'.format(msg))
+        if self.debug:
+            Log.debug('sending message back: \"{}\"'.format(msg))
         if msg:
             try:
                 self._snd(conn, msg, timeout=self.TIMEOUT)
             except Exception as e:
-                Log.err('error starting task: {}'.format(e))
+                Log.err('error sending response \"{}\": {}'.format(msg, e))
 
     def _listen(self, callback):
         ''' listen on unix socket and process command through callback '''
         err = ''
         if os.path.exists(self.path):
             err = 'file \"{}\" exists'.format(self.path)
-            self._debug(err)
+            if self.debug:
+                Log.debug(err)
             raise ComException(err)
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.sock.bind(self.path)
         self.sock.listen(1)
-        self._debug('start listening ...')
+        if self.debug:
+            Log.debug('start listening ...')
 
         while self.cont:
             if not os.path.exists(self.path):
@@ -115,23 +125,27 @@ class Com:
                 break
             conn, client = self.sock.accept()
             try:
-                self._debug('new connection')
+                if self.debug:
+                    Log.debug('new connection')
                 data = self._rcv(conn, timeout=self.TIMEOUT)
                 if not data:
                     conn.close()
                     continue
                 # hijack some messages
                 if data == Msg.ping:
-                    self._debug('ping received')
+                    if self.debug:
+                        Log.debug('ping received')
                     self._snd(conn, Msg.pong, timeout=self.TIMEOUT)
                     conn.close()
                     continue
                 elif data == Msg.stop:
-                    self._debug('stop received')
+                    if self.debug:
+                        Log.debug('stop received')
                     self._process_msg(conn, callback, data)
                     self.cont = False
                 elif data == Msg.debug:
-                    self._debug('toggling debug')
+                    if self.debug:
+                        Log.debug('toggling debug')
                     self.debug = not self.debug
                 # process received message
                 self._process_msg(conn, callback, data)
@@ -147,14 +161,15 @@ class Com:
         r, w, e = select.select([socket], [], [socket], timeout)
         if not (r or w or e):
             # timeout
-            self._debug('receive timeout')
+            if self.debug:
+                Log.debug('receive timeout')
             raise ComException('rcv timeout')
-        self._debug('send select {} {}'.format(r, e))
         try:
             for rsock in r:
                 if rsock != socket:
                     continue
-                self._debug('receiving data ...')
+                if self.debug:
+                    Log.debug('receiving data ...')
                 data = rsock.recv(self.BUFSZ).decode()
             for rsock in e:
                 if rsock != socket:
@@ -169,14 +184,17 @@ class Com:
         socket.setblocking(0)
         r, w, e = select.select([], [socket], [socket], timeout)
         if not (r or w or e):
-            self._debug('send timeout')
+            if self.debug:
+                Log.debug('send timeout')
             raise ComException('snd timeout')
-        self._debug('send select {} {}'.format(w, e))
+        if self.debug:
+            Log.debug('send select {} {}'.format(w, e))
         try:
             for wsock in w:
                 if wsock != socket:
                     continue
-                self._debug('sending data ...')
+                if self.debug:
+                    Log.debug('sending data ...')
                 wsock.sendall(data.encode())
             for wsock in e:
                 if wsock != socket:
@@ -185,8 +203,3 @@ class Com:
         finally:
             socket.setblocking(1)
         return data
-
-    def _debug(self, msg):
-        if not self.debug:
-            return
-        Log.debug(msg)

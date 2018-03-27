@@ -34,12 +34,6 @@ class Worker:
         ''' log with thread info '''
         Log.err('[{}] {}'.format(self.id, msg))
 
-    def _debug(self, msg):
-        ''' log with thread info '''
-        if not self.debug:
-            return
-        Log.debug('[{}] {}'.format(self.id, msg))
-
     def start(self, stopreq):
         ''' start syncing through filesystem monitoring '''
         self.mon = Fsmon(self, exclude=self.task.exclude, debug=self.debug)
@@ -61,17 +55,21 @@ class Worker:
     def _process_cmd(self, cmd):
         ''' process command received '''
         if cmd == Msg.stop:
-            self._debug('worker stopping')
+            if self.debug:
+                Log.debug('{} worker stopping'.format(self.id))
             return False
         if cmd == Msg.debug:
-            self._debug('worker toggle debug')
+            if self.debug:
+                Log.debug('{} worker toggle debug'.format(self.id))
             self.debug = not self.debug
             return True
         if cmd == Msg.resync:
-            self._debug('worker resync')
+            if self.debug:
+                Log.debug('{} worker resync'.format(self.id))
             self.sftp.initsync(self.task.local, self.task.remote)
         elif cmd == Msg.info:
-            self._debug('worker info')
+            if self.debug:
+                Log.debug('{} worker info'.format(self.id))
             msg = '[{}] \"{}\"to \"{}\"on {}'.format(self.id,
                                                      self.task.local,
                                                      self.task.remote,

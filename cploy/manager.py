@@ -56,14 +56,7 @@ class Manager:
                 self._work(action)
                 if self.debug:
                     Log.debug('task successfully started: {}'.format(action))
-        except SyncException as e:
-            Log.err('error starting task - se: {}'.format(e.msg))
-            msg = e.msg
-        except ConnectionException as e:
-            Log.err('error starting task - ce: {}'.format(e.msg))
-            msg = e.msg
         except Exception as e:
-            Log.err('error starting task: {}'.format(e))
             msg = str(e)
         return msg
 
@@ -148,17 +141,29 @@ class Manager:
         ''' launch the syncing '''
         if self.debug:
             Log.debug('creating task: \"{}\"'.format(args))
-        task = Task(args)
+        try:
+            task = Task(args)
+        except SyncException as e:
+            Log.err('error creating task: {}'.format(e.msg))
+            raise e
 
         Log.log('connecting with sftp')
         sftp = Sftp(task, self.threadid, debug=self.debug)
-        sftp.connect()
+        try:
+            sftp.connect()
+        except ConnectionException as e:
+            Log.err('error connecting: {}'.format(e.msg))
+            raise e
+        except SyncException as e:
+            Log.err('error connecting: {}'.format(e.msg))
+            raise e
 
         # try to do first sync
         Log.log('first sync initiated')
         if not sftp.initsync(task.local, task.remote):
             sftp.close()
             err = 'unable to sync dir'
+            Log.err(err)
             raise SyncException(err)
 
         # work args

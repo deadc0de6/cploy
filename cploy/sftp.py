@@ -17,6 +17,7 @@ from cploy.exceptions import *
 
 class Sftp:
 
+    CWD = '.'
     KNOWNHOSTS = '~/.ssh/known_hosts'
 
     def __init__(self, task, id, debug=False):
@@ -34,7 +35,8 @@ class Sftp:
 
     def connect(self):
         ''' connect on remote through sftp '''
-        self._debug('initiate connection ...')
+        if self.debug:
+            Log.debug('{} initiate connection'.format(self.id))
         if self.trans and self.trans.is_authenticated():
             return
         if not self._verif_hostkey(self.task.hostname):
@@ -47,7 +49,8 @@ class Sftp:
             err = 'cannot authenticate'
             self._err(err)
             raise ConnectionException(err)
-        self._debug('is authenticated')
+        if self.debug:
+            Log.debug('{} is authenticated'.format(self.id))
         self.trans = trans
         self.sftp = paramiko.SFTPClient.from_transport(self.trans)
         if not os.path.exists(self.task.local):
@@ -62,13 +65,20 @@ class Sftp:
             raise SyncException(err)
 
         if not self.exists(self.task.remote):
-            self._debug('create remote directory')
+            if self.debug:
+                Log.debug('{} create remote directory'.format(self.id))
             self.mkdirp(self.task.remote)
+
+        # change to monitored directory
+        if self.debug:
+            Log.debug('{} chdir to \"{}\"'.format(self.id, self.task.remote))
+        self.sftp.chdir(self.task.remote)
 
     def _con_key(self):
         ''' connect using provided key '''
         t = paramiko.Transport((self.task.hostname, self.task.port))
-        self._debug('connecting using provided key for sftp ...')
+        if self.debug:
+            Log.log('{} connecting using key'.format(self.id))
         k = paramiko.RSAKey.from_private_key_file(self.task.key,
                                                   password=self.task.keypass)
         t.connect(username=self.task.username, pkey=k)
@@ -77,7 +87,8 @@ class Sftp:
     def _con_pass(self):
         ''' connect using provided password '''
         t = paramiko.Transport((self.task.hostname, self.task.port))
-        self._debug('connecting using provided password ...')
+        if self.debug:
+            Log.debug('{} connecting using password'.format(self.id))
         t.connect(username=self.task.username, password=self.task.password)
         return t
 
@@ -85,20 +96,21 @@ class Sftp:
         ''' connect using agent '''
         t = paramiko.Transport((self.task.hostname, self.task.port))
         err = 'ok'
-        self._debug('connecting using agent ...')
+        if self.debug:
+            Log.debug('{} connecting using agent'.format(self.id))
         agent = paramiko.agent.Agent()
         keys = agent.get_keys()
         # try all keys
         for key in keys:
             t = paramiko.Transport((self.task.hostname, self.task.port))
             fp = binascii.hexlify(key.get_fingerprint()).decode("utf-8")
-            self._debug('trying to connect with key {}'.format(fp))
+            if self.debug:
+                Log.debug('{} trying with key {}'.format(self.id, fp))
             try:
                 t.connect(username=self.task.username, pkey=key)
             except paramiko.ssh_exception.SSHException as e:
                 continue
             if t.is_authenticated():
-                self._debug('connection successful with key {}'.format(fp))
                 break
             t.close()
         return t
@@ -135,7 +147,8 @@ class Sftp:
         for f in files:
             lpath = os.path.join(ldir, f)
             rpath = os.path.join(rdir, f)
-            self._debug('[sync] init file: {}'.format(rpath))
+            if self.debug:
+                Log.log('{} init file: {}'.format(self.id, rpath))
             if not self.copy(lpath, rpath):
                 return False
         return True
@@ -145,7 +158,8 @@ class Sftp:
         for d in dirs:
             lpath = os.path.join(ldir, d)
             rpath = os.path.join(rdir, d)
-            self._debug('[sync] init dir: {}'.format(rpath))
+            if self.debug:
+                Log.debug('{} init dir: {}'.format(self.id, rpath))
             if self.exists(rpath):
                 continue
             if not self.mkdir(rpath):
@@ -154,7 +168,8 @@ class Sftp:
 
     def initsync(self, ldir, rdir):
         ''' sync local directory on remote '''
-        self._debug('[sync] sync dir {} with {}'.format(ldir, rdir))
+        if self.debug:
+            Log.debug('{} sync dir {} with {}'.format(self.id, ldir, rdir))
         for cur, subd, files in os.walk(ldir):
             com = os.path.commonpath([ldir, cur])
             rcur = os.path.join(rdir, cur[len(com)+1:])
@@ -164,7 +179,8 @@ class Sftp:
                 return False
             for sub in subd:
                 rpath = os.path.join(rcur, sub)
-                self._debug('[sync] init sub: {}'.format(rpath))
+                if self.debug:
+                    Log.debug('{} init sub: {}'.format(self.id, rpath))
                 if not self.mkdir(rpath):
                     return False
         return True
@@ -172,14 +188,15 @@ class Sftp:
     def copy(self, lpath, rpath):
         ''' copy file to the remote '''
         if not os.path.exists(lpath):
-            self._debug('[sync] copy - lfile disappeared: {}'.format(lpath))
             return False
         d = os.path.dirname(rpath)
         if not self.exists(d):
-            self._debug('[sync] create remote dir: {}'.format(d))
+            if self.debug:
+                Log.debug('{} create remote dir: {}'.format(self.id, d))
             if not self.mkdir(d):
                 return False
-        self._debug('[sync] copy {} to {}'.format(lpath, rpath))
+        if self.debug:
+            Log.debug('{} copy {} to {}'.format(self.id, lpath, rpath))
         try:
             self.sftp.put(lpath, rpath)
             self.chattr(lpath, rpath)
@@ -196,17 +213,20 @@ class Sftp:
 
     def mkdirp(self, path):
         ''' mkdir -p recursive equivalent '''
+        if self.debug:
+            Log.debug('{} mkdir -p {}'.format(self.id, path))
         (head, tail) = os.path.split(path)
         if head and not self.exists(head):
             self.mkdirp(head)
         if tail:
-            self.mkdir(tail)
+            self.mkdir(path)
 
     def mkdir(self, path):
         ''' mkdir on remote '''
         if self.exists(path):
             return True
-        self._debug('[sync] mkdir {}'.format(path))
+        if self.debug:
+            Log.debug('{} mkdir {}'.format(self.id, path))
         try:
             self.sftp.mkdir(path)
         except FileNotFoundError:
@@ -226,10 +246,12 @@ class Sftp:
             return True
         try:
             if self.is_dir(path):
-                self._debug('[sync] rm -r {}'.format(path))
+                if self.debug:
+                    Log.debug('{} rm -r {}'.format(self.id, path))
                 self.sftp.rmdir(path)
             elif self.is_file(path):
-                self._debug('[sync] rm {}'.format(path))
+                if self.debug:
+                    Log.debug('{} rm {}'.format(self.id, path))
                 self.sftp.remove(path)
         except PermissionError as e:
             Log.err('cannot remove file {}: {}'.format(rpath, e))
@@ -242,12 +264,11 @@ class Sftp:
     def chattr(self, lpath, rpath):
         ''' change file attribute '''
         if not os.path.exists(lpath):
-            self._debug('[sync] chattr - {} does not exist'.format(lpath))
             return False
         if not self.exists(rpath):
-            self._debug('[sync] chattr - {} does not exist'.format(rpath))
             return False
-        self._debug('[sync] chattr {}'.format(rpath))
+        if self.debug:
+            Log.log('{} chattr {}'.format(self.id, rpath))
         try:
             self.sftp.chmod(rpath, self._get_mode(lpath))
         except PermissionError as e:
@@ -260,9 +281,9 @@ class Sftp:
 
     def mv(self, rsrc, rdst):
         if not self.exists(rsrc):
-            self._debug('[sync] mv - src file disappeared: {}'.format(rsrc))
             return True
-        self._debug('[sync] mv {} {}'.format(rsrc, rdst))
+        if self.debug:
+            Log.debug('{} mv {} {}'.format(self.id, rsrc, rdst))
         try:
             self.sftp.rename(rsrc, rdst)
         except PermissionError as e:
@@ -300,8 +321,13 @@ class Sftp:
 
     def execute(self, cmd):
         ''' execute command on remote through sftp '''
-        self._debug('[sync] run on remote: \"{}\"'.format(cmd))
+        if self.debug:
+            Log.debug('{} run on remote: \"{}\"'.format(self.id, cmd))
         channel = self.trans.open_session()
+        # this will execute in default dir (usually $HOME)
+        # unless forced using below lines
+        # chd = 'cd {}'.format(self.task.remote)
+        # channel.exec_command(chd)
         channel.exec_command(cmd)
         return True
 
@@ -322,9 +348,3 @@ class Sftp:
     def _err(self, msg):
         msg = '[{}] {}'.format(self.id, msg)
         Log.err(msg)
-
-    def _debug(self, msg):
-        if not self.debug:
-            return
-        msg = '[{}] {}'.format(self.id, msg)
-        Log.debug(msg)

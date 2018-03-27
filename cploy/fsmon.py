@@ -68,18 +68,13 @@ class EventHandler(pyinotify.ProcessEvent):
         self.debug = debug
         self.move_from = None
 
-    def _debug(self, msg):
-        if not self.debug:
-            return
-        msg = '[event][{}] {}'.format(self.id, msg)
-        Log.debug(msg)
-
     def _ignore(self, path):
         ''' check if this path needs to be ignored '''
         if not self.exclude:
             return False
         if any([fnmatch.fnmatch(event.pathname, p) for p in self.exclude]):
-            self._debug('{} ignored'.format(event.pathname))
+            if self.debug:
+                Log.debug('{} {} ignored'.format(self.id, event.pathname))
             return True
         return False
 
@@ -88,49 +83,49 @@ class EventHandler(pyinotify.ProcessEvent):
         if not event.dir:
             # only process directory creation
             return
-        self._debug('creating: {}'.format(self.id, event.pathname))
+        if self.debug:
+            Log.debug('{} creating: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if os.path.exists(event.pathname):
             self.worker.create(event.pathname)
-        else:
-            self._debug('file disappeared: {}'.format(event.pathname))
 
     def process_IN_DELETE(self, event):
         ''' something was deleted '''
-        self._debug('removing: {}'.format(event.pathname))
+        if self.debug:
+            Log.debug('{} removing: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         self.worker.delete(event.pathname)
 
     def process_IN_ATTRIB(self, event):
         ''' some attribute changed '''
-        self._debug('attrib: {}'.format(event.pathname))
+        if self.debug:
+            Log.debug('{} attrib: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if os.path.exists(event.pathname):
             self.worker.attrib(event.pathname)
-        else:
-            self._debug('file disappeared: {}'.format(event.pathname))
 
     def process_IN_CLOSE_WRITE(self, event):
         ''' was written to '''
-        self._debug('close-write: {}'.format(event.pathname))
+        if self.debug:
+            Log.debug('{} close-write: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if os.path.exists(event.pathname):
             self.worker.mirror(event.pathname)
-        else:
-            self._debug('file disappeared: {}'.format(event.pathname))
 
     def process_IN_MOVED_FROM(self, event):
         ''' first call for moves '''
-        self._debug('move from: {}'.format(event.pathname))
+        if self.debug:
+            Log.debug('{} move from: {}'.format(self.id, event.pathname))
         self.move_from = event.pathname
 
     def process_IN_MOVED_TO(self, event):
         ''' second call for moves '''
-        self._debug('move to: {}'.format(event.pathname))
+        if self.debug:
+            Log.debug('{} move to: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if self.move_from:

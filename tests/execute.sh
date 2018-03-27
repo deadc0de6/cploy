@@ -23,6 +23,8 @@ echo "[===] TEST command execution"
 python3 -m cploy.cploy daemon ${opt} start
 [ "$?" != "0" ] && echo "ERROR daemon start" && exit 1
 
+sleep 2
+
 python3 -m cploy.cploy sync ${opt} ${key} --force ${l} localhost ${r} --command="echo -n test >> ${dst}"
 [ "$?" != "0" ] && echo "ERROR sync" && exit 1
 

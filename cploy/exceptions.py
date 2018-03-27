@@ -8,18 +8,18 @@ class ConnectionException(Exception):
     ''' Connection exception in SFTP '''
     def __init__(self, msg):
         super(ConnectionException, self).__init__(msg)
-        self.msg = msg
+        self.msg = 'ConnectionException: {}'.format(msg)
 
 
 class SyncException(Exception):
     ''' Sync exception in SFTP '''
     def __init__(self, msg):
         super(SyncException, self).__init__(msg)
-        self.msg = msg
+        self.msg = 'SyncException: {}'.format(msg)
 
 
 class ComException(Exception):
     ''' Socket communication exception '''
     def __init__(self, msg):
         super(ComException, self).__init__(msg)
-        self.msg = msg
+        self.msg = 'ComException: {}'.format(msg)

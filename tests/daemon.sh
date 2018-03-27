@@ -10,7 +10,7 @@ echo "[===] TEST start"
 python3 -m cploy.cploy daemon ${opt} start
 [ "$?" != "0" ] && echo "ERROR daemon start" && exit 1
 
-sleep 1
+sleep 2
 
 echo "[===] TEST info"
 python3 -m cploy.cploy daemon ${opt} info
