@@ -7,7 +7,7 @@
 
 *The ad hoc continuous deployment solution for developers*
 
-I sometimes have to code stuff that needs to be run on remote hosts.
+I sometimes have to code stuff that needs to be deployed and run on remote hosts.
 Since I don't have all my prefs/settings/dotfiles/etc on the remote, I usually code
 on local and have a small one-liner lying around that allows me to quickly deploy
 the code (with `scp` or similar) and run some command on the other side (with `ssh` for example).
@@ -15,7 +15,7 @@ This is not optimal and that's the reason I created *cploy*.
 
 *Cploy* allows to mirror changes performed on a local directory to a remote
 host through SSH. A specific command (bash one-liner for example) can be run
-after any change for example to trigger a build.
+after any change, for example to trigger a build or execute a script.
 
 Features:
 
@@ -43,6 +43,13 @@ see [usage](#usage) for more info
 
 * [Installation](#installation)
 * [Usage](#usage)
+
+  * [Adding a task](#adding-a-task)
+  * [Remote command execution](#remote-command-execution)
+  * [Talking with the daemon](#talking-with-the-daemon)
+  * [Exclusion](#exclusion)
+  * [Sync events](#sync-events)
+
 * [Contribution](#contribution)
 
 # Installation
@@ -78,7 +85,10 @@ $ cploy --help
 # Usage
 
 The usual way of using *cploy* is by starting the daemon and adding
-tasks to it (directories to sync between local and a remote host).
+tasks to it (directory to mirror on a remote host).
+
+Once a new task is added, every changes in the monitored directory
+is mirrored on the remote host through SSH.
 
 Start the daemon
 ```bash
@@ -88,13 +98,16 @@ $ cploy daemon start --debug
 and then add tasks to it:
 ```bash
 # sync dir /tmp/local on localhost to
-# /tmp/remote on host somehost
+# /tmp/remote on host "somehost"
 $ cploy sync /tmp/local/ somehost /tmp/remote
 ```
 
+Check the logs for any issue under `/tmp/cploy/cploy.log`.
+
 Usage:
-```bash
+```
 cploy
+
 Usage:
     cploy sync [-dfF] [-p <port>] [-u <user>] [-P <pass>]
         [-k <key>] [-K <pass>] [-c <cmd>] [-e <pattern>...]
@@ -108,7 +121,7 @@ Usage:
 
 Options:
     -p --port=<port>          SSH port to use [default: 22].
-    -u --user=<user>          username for SSH [default: drits].
+    -u --user=<user>          username for SSH [default: $USER].
     -k --key=<key>            Path of SSH private key to use.
     -P --pass=<pass>          SSH password to use.
     -K --keypass=<pass>       SSH private key passphrase.
@@ -121,17 +134,28 @@ Options:
     -h --help                 Show this screen.
 ```
 
-## Remote host
+## Adding a task
 
 Connections to a remote hosts is done using SFTP (SSH). Multiple
 options can be changed: connection with password, with SSH keys, using
 the SSH agent, different port, different username, etc.
 
-Besides using the above options, The *<hostname>* argument can also be
-provided using a format similar to what the SSH client provides:
+Besides using the above switches, The *<hostname>* argument can also be
+provided using a compact format similar to what the SSH client provides:
 ```
 <username>@<hostname>:<port>
 ```
+
+After adding a task, make sure to check the daemon to see if the task has
+been added successfully with `cploy daemon info`. In case it wasn't, checking
+the logs in `/tmp/cploy/cploy.log` that usually allows to identify the issue.
+
+Requirements:
+
+* SSH access is working (obviously)
+* remote host key is trusted
+* local directory exists (`<local_path>`)
+* remote directory does not exist (`<remote_path>`) unless `--force` is used
 
 ## Talking with the daemon
 
@@ -149,7 +173,14 @@ A few commands are available to talk to the daemon:
 If you prefer not to use the daemon, it can also be run in the foreground
 by using the `--front` switch.
 
-## Excluding
+Getting information from the daemon allows to see the different task
+running and their id:
+
+```bash
+$ cploy daemon info
+```
+
+## Exclusion
 
 Files can be excluded within the monitored directory by using `--exclude`.
 Matching is done using [fnmatch](https://docs.python.org/3.4/library/fnmatch.html).
@@ -163,6 +194,20 @@ Exclude any files containing *test*
 ```
 --exclude '*/test*'
 ```
+
+## Sync events
+
+Here is a list of changes that are sync'ed:
+
+* File creation
+* File deletion
+* File attribute change
+* File content modification
+* File move
+
+## Monitor the changes
+
+If the daemon is running, logs are written in `/tmp/cploy/cploy.log`.
 
 # Issues and bugs
 
