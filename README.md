@@ -21,9 +21,9 @@ Features:
 
   * handle multiple syncs in parallel
   * secure sync through SSH
-  * can be daemonized
+  * runs in the background
   * allows to provide a specific command to run on each local change
-  * allows to exclude some files from sync
+  * ability to exclude some files from sync
 
 Quick start:
 ```bash
@@ -44,11 +44,9 @@ see [usage](#usage) for more info
 * [Installation](#installation)
 * [Usage](#usage)
 
-  * [Connection](#connection)
-  * [Remote path](#remote-path)
   * [Adding a task](#adding-a-task)
   * [Talking with the daemon](#talking-with-the-daemon)
-  * [Exclusion](#exclusion)
+  * [File exclusion](#file-exclusion)
   * [Sync events](#sync-events)
   * [Run a command on change](#run-a-command-on-change)
 
@@ -59,6 +57,7 @@ see [usage](#usage) for more info
 To install run:
 ```bash
 $ sudo pip3 install cploy
+$ cploy --help
 ```
 
 Or from github directly
@@ -86,25 +85,23 @@ $ cploy --help
 
 # Usage
 
-The usual way of using *cploy* is by starting the daemon and adding
-tasks to it (directory to mirror on a remote host).
-
-Once a new task is added, every changes in the monitored directory
-is mirrored on the remote host through SSH.
+The usual way of using *cploy* is by starting the daemon. A task will
+continuously synchronize any change made to a specific local directory
+on a remote path. All synchronizations are done through SSH.
 
 Start the daemon
 ```bash
 $ cploy daemon start --debug
 ```
 
-and then add a task to it:
+The daemon's logs are in `/tmp/cploy/cploy.log`.
+
+Add a task to it:
 ```bash
-# sync dir /tmp/local on localhost to
-# /tmp/remote on host "somehost"
+# sync local dir /tmp/local
+# on host "somehost" under /tmp/remote
 $ cploy sync /tmp/local/ somehost /tmp/remote
 ```
-
-Check the logs for any issue under `/tmp/cploy/cploy.log`.
 
 Usage:
 ```
@@ -136,27 +133,6 @@ Options:
     -h --help                 Show this screen.
 ```
 
-## Connection
-
-Connections to a remote hosts is done using SFTP (SSH). Multiple
-options can be changed: connection with password, with SSH keys, using
-the SSH agent, different port, different username, etc.
-
-Besides using the above switches, The *<hostname>* argument can also be
-provided using a compact format similar to what the SSH client provides:
-```
-<username>@<hostname>:<port>
-```
-
-## Remote path
-
-The `<remote_path>` is normalized based on the default user's directory
-on the remote (usually `$HOME`). For example `../../tmp/test` would
-result in `/tmp/test` if the remote user's home is `/home/user`.
-
-Note that shell expansions are not performed on remote paths (like `~` for example)
-neither are environment variables (like `$HOME`).
-
 ## Adding a task
 
 Tasks can be added by using the `sync` command.
@@ -165,11 +141,27 @@ After adding a task, make sure to check the daemon to see if the task has
 been added successfully with `cploy daemon info`. In case it wasn't, checking
 the logs in `/tmp/cploy/cploy.log` usually allows to identify the issue.
 
-Once a new task is added, *cploy* will start by copying any local existing files to
-the remote directory to initiate the mirror. Then, any change to the local directory
-is applied on the remote.
+Connections to a remote hosts is done using SFTP (SSH). Multiple
+connection options can be applied: connection with password, with SSH keys, using
+the SSH agent, different port, different username, etc.
 
-Requirements:
+Besides using the above switches, The *<hostname>* argument can also be
+provided using a compact format similar to what the SSH client provides:
+```
+<username>@<hostname>:<port>
+```
+
+The `<remote_path>` is normalized based on the default user's directory
+on the remote (usually `$HOME`). For example `../../tmp/test` would
+result in `/tmp/test` if the remote user's default directory is `/home/user`.
+Note that shell expansions are not performed on remote paths (like `~` for example)
+neither are environment variables (like `$HOME`).
+
+Once a new task is added, *cploy* will start by copying any local existing files to
+the remote directory to initiate the remote directory. Then, any change to the local directory
+is automatically applied on the remote.
+
+Connection Requirements:
 
 * SSH access is working (obviously)
 * remote host key is trusted
@@ -188,9 +180,9 @@ A few commands are available to talk to the daemon with the
 * **ping**: ping the daemon
 * **debug**: toggle debug flag
 * **unsync**: stop syncing a specific task
-* **resync**: do a full sync starting from local of the sync'ed directory
+* **resync**: force a full sync of the local directory to the remote one
 
-If you prefer not to use the daemon, *cploy*'s daemon can also be run in the foreground
+If you prefer not to use the daemon, *cploy* can also be entirely run in the foreground
 by using the `--front` switch. However only a single task can be added to it then.
 
 Getting information from the daemon allows to see the different task
@@ -200,7 +192,7 @@ running and their id:
 $ cploy daemon info
 ```
 
-## Exclusion
+## File exclusion
 
 Files can be excluded from the sync in the monitored directory by using
 the `--exclude` switch.
@@ -218,7 +210,7 @@ Example: exclude any files containing *test*
 
 ## Sync events
 
-Here is a list of changes that are mirrored on the remote:
+Here is a list of changes that are synchronized on the remote:
 
 * File creation
 * File deletion
@@ -234,21 +226,15 @@ is applied on the local monitored directory.
 
 *Cploy* uses paramiko channel's
 [exec\_command](http://docs.paramiko.org/en/2.4/api/channel.html#paramiko.channel.Channel)
-to execute the command which will be run from the default directory of the user
+to execute the command which will be run from the default directory of the remote user
 (usually `$HOME`).
 
-Therefore if the remote directory is `/tmp/remote` and the script to
+For example if the remote directory is `/tmp/remote` and the script to
 run remotely is located in `/tmp/remote/test.sh`, the command argument
 will be `--command="/tmp/remote/test.sh"`.
 
 Currently the specified command is run on any change with no control
 over the granularity.
-
-# Issues and bugs
-
-This hasn't been extensively tested so please do report any bug you find.
-Starting the daemon with `--debug` is always helpful to get more info
-(or toggle it with the daemon command `debug`).
 
 # Contribution
 
