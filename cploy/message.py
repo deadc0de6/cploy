@@ -14,4 +14,6 @@ class Message:
     debug = 'debug'
     ping = 'ping'
     pong = 'pong'
+    resume = 'resume'
     ack = 'ok'
+    error = 'error'

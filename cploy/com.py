@@ -102,6 +102,8 @@ class Com:
             Log.err('starting task failed: {}'.format(e))
         if self.debug:
             Log.debug('sending message back: \"{}\"'.format(msg))
+        if not msg:
+            msg = Msg.error
         if msg:
             try:
                 self._snd(conn, msg, timeout=self.TIMEOUT)

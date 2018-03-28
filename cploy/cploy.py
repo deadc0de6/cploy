@@ -29,6 +29,7 @@ from .message import Message as Msg
 DIRPATH = '/tmp/{}'.format(BANNER)
 PIDPATH = '{}/{}.pid'.format(DIRPATH, BANNER)
 LOGPATH = '{}/{}.log'.format(DIRPATH, BANNER)
+SAVPATH = '{}/{}.save'.format(DIRPATH, BANNER)
 SPATH = '{}/{}.socket'.format(DIRPATH, BANNER)
 MAXWAIT = 15  # seconds
 
@@ -56,6 +57,8 @@ def daemon_send(data, debug, quiet=False):
         Log.debug('received back: \"{}\"'.format(msg))
     if not quiet:
         Log.log(msg)
+        if msg == Msg.error:
+            Log.log('check the daemon logs under \"{}\"'.format(LOGPATH))
     return True
 
 
@@ -64,7 +67,7 @@ def daemon_cmd(args, debug):
     ret = True
     if args['start']:
         Log.log('starting daemon ...')
-        daemonize(args, debug)
+        ret = daemonize(args, debug)
     elif args['restart']:
         Log.log('re-starting daemon ...')
         if daemon_send(Msg.stop, debug, quiet=True):
@@ -73,7 +76,7 @@ def daemon_cmd(args, debug):
         if pid:
             Log.err('daemon still runing: pid {}'.format(pid))
             return False
-        daemonize(args, debug)
+        ret = daemonize(args, debug)
     elif args['stop']:
         Log.log('stopping daemon ...')
         if daemon_send(Msg.stop, debug):
@@ -96,6 +99,14 @@ def daemon_cmd(args, debug):
         Log.log('resync task {} ...'.format(id))
         msg = '{} {}'.format(Msg.resync, id)
         ret = daemon_send(msg, debug)
+    elif args['resume']:
+        path = args['<path>']
+        if not os.path.exists(path):
+            Log.err('path \"{}\" does not exist'.format(path))
+            return False
+        Log.log('resume task from file {} ...'.format(path))
+        msg = '{} {}'.format(Msg.resume, path)
+        ret = daemon_send(msg, debug)
     if not ret:
         Log.err('error communicating with daemon, is it running?')
     return ret
@@ -109,7 +120,8 @@ def sig_stop(signum, frame):
 def start_manager(args, debug, actions=[]):
     ''' start the manager '''
     Log.log('daemon pid: {}'.format(os.getpid()))
-    manager = Manager(args, SPATH, front=args['--front'], debug=debug)
+    manager = Manager(args, SPATH, front=args['--front'],
+                      savefile=SAVPATH, debug=debug)
     if not manager.start(actions=actions):
         Log.err('manager failed to start')
         return False
@@ -124,9 +136,14 @@ def daemonize(args, debug, actions=[]):
         return
     Log.log('daemon started, logging to {}'.format(LOGPATH))
     context = get_context(debug)
-    context.open()
+    try:
+        context.open()
+    except Exception as e:
+        Log.err('cannot open context: {}'.format(e))
+        return False
     with context:
         start_manager(args, debug, actions=actions)
+    return True
 
 
 def wait_for_stop(debug):
@@ -223,7 +240,7 @@ def main():
         else:
             if not pid:
                 Log.log('starting manager in background and adding task')
-                daemonize(args, debug, actions=[action])
+                ret = daemonize(args, debug, actions=[action])
             else:
                 Log.log('manager already running ... sending new task')
                 daemon_send(action, debug)

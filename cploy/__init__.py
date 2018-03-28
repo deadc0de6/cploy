@@ -18,8 +18,9 @@ Usage:
         <local_path> <hostname> <remote_path>
     {0} daemon [-d] (start | stop | restart)
     {0} daemon [-d] (info | ping | debug)
-    {0} daemon unsync <id>
-    {0} daemon resync <id>
+    {0} daemon [-d] unsync <id>
+    {0} daemon [-d] resync <id>
+    {0} daemon [-d] resume <path>
     {0} --help
     {0} --version
 

@@ -4,10 +4,13 @@ Copyright (c) 2018, deadc0de6
 Manager sitting between workers and the communication medium
 """
 
+import os
 import threading
 import queue
 import time
 import json
+import shlex
+from docopt import docopt
 
 # local imports
 from cploy.log import Log
@@ -17,15 +20,17 @@ from cploy.worker import Worker
 from cploy.com import Com
 from cploy.message import Message as Msg
 from cploy.exceptions import *
+from . import __usage__ as USAGE
 
 
 class Manager:
 
-    def __init__(self, args, socketpath,
-                 front=False, debug=False):
+    def __init__(self, args, socketpath, front=False,
+                 savefile=None, debug=False):
         self.args = args
         self.socketpath = socketpath
         self.front = front
+        self.savefile = savefile
         self.debug = debug
         self.threadid = 1
 
@@ -48,20 +53,24 @@ class Manager:
 
     def _process_actions(self, actions):
         ''' process all actions in list '''
-        msg = Msg.ack
-        try:
-            for action in actions:
+        msg = []
+        for action in actions:
+            try:
                 action = json.loads(action)
+                print(action)
                 if not action:
                     continue
                 if self.debug:
-                    Log.debug('executing action: \"{}\"'.format(action['cli']))
+                    Log.debug('executing task: \"{}\"'.format(action['cli']))
                 self._work(action)
                 if self.debug:
                     Log.debug('task started: \"{}\"'.format(action['cli']))
-        except Exception as e:
-            msg = str(e)
-        return msg
+            except Exception as e:
+                Log.err('task \"{}\" failed: {}'.format(action, e))
+                msg.append(str(e))
+        if not msg:
+            msg = [Msg.ack]
+        return ', '.join(msg)
 
     def callback(self, action):
         ''' process command received through the communication thread '''
@@ -88,6 +97,9 @@ class Manager:
             if id < self.threadid:
                 t = next((x for x in self.lthreads if x.id == id), None)
                 t.queue.put(Msg.resync)
+        elif action.startswith(Msg.resume):
+            path = action.split()[1]
+            msg = self._resume(path)
         else:
             msg = self._process_actions([action])
         return msg
@@ -104,7 +116,7 @@ class Manager:
         # give some time to threads to answer
         time.sleep(1)
         while not self.rqueue.empty():
-            msg += '\n{}'.format(self.rqueue.get())
+            msg += '\n\t{}'.format(self.rqueue.get())
         if self.debug:
             Log.debug('info: {}'.format(msg))
         return msg
@@ -127,6 +139,32 @@ class Manager:
         for t in self.lthreads:
             t.queue.put(Msg.debug)
 
+    def _resume(self, path):
+        ''' resume tasks from file '''
+        clis = []
+        if not path or not os.path.exists(path):
+            return clis
+        with open(path, 'r') as fd:
+            clis = fd.readlines()
+        clis = [l.strip() for l in clis]
+        jsons = []
+        for cli in clis:
+            args = docopt(USAGE, help=False, argv=shlex.split(cli))
+            args['cli'] = cli
+            jsons.append(json.dumps(args))
+        msg = self._process_actions(jsons)
+        return msg
+
+    def _save(self, clis):
+        ''' save tasks to file '''
+        if not self.savefile:
+            return
+        with open(self.savefile, 'a') as fd:
+            for cli in clis:
+                fd.write('{}\n'.format(cli))
+        if clis:
+            Log.log('syncs saved to {}'.format(self.savefile))
+
     def _start_com(self):
         ''' start the communication '''
         self.sock = Com(self.socketpath, debug=self.debug)
@@ -136,8 +174,13 @@ class Manager:
             Log.err(e)
         # blackhole
         self.sock.stop()
+
+        clis = []
         for t in self.lthreads:
             self._stop_thread(t)
+            clis.append(t.task.get_cli())
+        self._save(clis)
+
         if self.debug:
             Log.debug('all threads have stopped, stopping')
 
@@ -162,9 +205,11 @@ class Manager:
             sftp.connect()
         except ConnectionException as e:
             Log.err('error connecting: {}'.format(e.msg))
+            self.hashes.remove(check)
             raise e
         except SyncException as e:
             Log.err('error connecting: {}'.format(e.msg))
+            self.hashes.remove(check)
             raise e
 
         # try to do first sync
@@ -173,6 +218,7 @@ class Manager:
             sftp.close()
             err = 'unable to sync dir'
             Log.err(err)
+            self.hashes.remove(check)
             raise SyncException(err)
 
         # work args

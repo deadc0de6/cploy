@@ -21,9 +21,11 @@ Features:
 
   * handle multiple syncs in parallel
   * secure sync through SSH
-  * runs in the background
-  * allows to provide a specific command to run on each local change
+  * run in the background
+  * execute command on each local change
   * ability to exclude some files from sync
+  * save and resume tasks
+  * load tasks from file
 
 Quick start:
 ```bash
@@ -49,6 +51,7 @@ see [usage](#usage) for more info
   * [File exclusion](#file-exclusion)
   * [Sync events](#sync-events)
   * [Run a command on change](#run-a-command-on-change)
+  * [Save and resume tasks](#save-and-resume-tasks)
 
 * [Contribution](#contribution)
 
@@ -113,8 +116,9 @@ Usage:
         <local_path> <hostname> <remote_path>
     cploy daemon [-d] (start | stop | restart)
     cploy daemon [-d] (info | ping | debug)
-    cploy daemon unsync <id>
-    cploy daemon resync <id>
+    cploy daemon [-d] unsync <id>
+    cploy daemon [-d] resync <id>
+    cploy daemon [-d] resume <path>
     cploy --help
     cploy --version
 
@@ -181,6 +185,7 @@ A few commands are available to talk to the daemon with the
 * **debug**: toggle debug flag
 * **unsync**: stop syncing a specific task
 * **resync**: force a full sync of the local directory to the remote one
+* **resume**: resume sync from a file
 
 If you prefer not to use the daemon, *cploy* can also be entirely run in the foreground
 by using the `--front` switch. However only a single task can be added to it then.
@@ -235,6 +240,28 @@ will be `--command="/tmp/remote/test.sh"`.
 
 Currently the specified command is run on any change with no control
 over the granularity.
+
+# Save and resume tasks
+
+Each time *cploy*'s daemon is stopped, it will append its running tasks
+to `/tmp/cploy/cploy.save`. This file can easily be edited or saved for backup.
+
+*Cploy* can resume tasks from a saved file by calling the `resume` daemon's command
+and providing it with a valid saved file.
+
+Here's an example of a saved file's content describing two tasks:
+```
+sync /tmp/first host1 /tmp/remote --debug --force
+sync /tmp/second host2 /tmp/remote --debug --force
+```
+
+This also allows to describe tasks in a file directly instead of
+calling the command line for each task.
+Issuing the following command will load the tasks from `/tmp/sometasks`
+
+```bash
+$ cploy daemon resume /tmp/sometasks
+```
 
 # Contribution
 
