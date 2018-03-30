@@ -59,12 +59,6 @@ class Sftp:
             self._err(err)
             raise SyncException(err)
 
-        # adapt remote path with sftp
-        self.task.remote = self.sftp.normalize(self.task.remote)
-        if self.debug:
-            Log.debug('{} rpath adapted to {}'.format(self.id,
-                                                      self.task.remote))
-
         if self.exists(self.task.remote) and not self.task.force:
             self.close()
             err = 'remote path exists (use --force)'
@@ -75,6 +69,12 @@ class Sftp:
             if self.debug:
                 Log.debug('{} create remote directory'.format(self.id))
             self.mkdirp(self.task.remote)
+
+        # adapt remote path with sftp
+        self.task.remote = self.sftp.normalize(self.task.remote)
+        if self.debug:
+            Log.debug('{} rpath adapted to {}'.format(self.id,
+                                                      self.task.remote))
 
         # change to monitored directory
         if self.debug:
@@ -179,19 +179,22 @@ class Sftp:
         ''' sync local directory on remote '''
         if self.debug:
             Log.debug('{} sync dir {} with {}'.format(self.id, ldir, rdir))
-        for cur, subd, files in os.walk(ldir):
-            com = os.path.commonpath([ldir, cur])
-            rcur = os.path.join(rdir, cur[len(com)+1:])
-            if not self._init_files(files, cur, rcur):
-                return False
-            if not self._init_dirs(subd, cur, rcur):
-                return False
-            for sub in subd:
-                rpath = os.path.join(rcur, sub)
-                if self.debug:
-                    Log.debug('{} init sub: {}'.format(self.id, rpath))
-                if not self.mkdir(rpath):
+        try:
+            for cur, subd, files in os.walk(ldir):
+                com = os.path.commonpath([ldir, cur])
+                rcur = os.path.join(rdir, cur[len(com)+1:])
+                if not self._init_files(files, cur, rcur):
                     return False
+                if not self._init_dirs(subd, cur, rcur):
+                    return False
+                for sub in subd:
+                    rpath = os.path.join(rcur, sub)
+                    if self.debug:
+                        Log.debug('{} init sub: {}'.format(self.id, rpath))
+                    if not self.mkdir(rpath):
+                        return False
+        except Exception as e:
+            raise SyncException('initsync: {}'.format(e))
         return True
 
     def copy(self, lpath, rpath):
