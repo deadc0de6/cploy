@@ -72,9 +72,9 @@ class EventHandler(pyinotify.ProcessEvent):
         ''' check if this path needs to be ignored '''
         if not self.exclude:
             return False
-        if any([fnmatch.fnmatch(event.pathname, p) for p in self.exclude]):
+        if any([fnmatch.fnmatch(path, p) for p in self.exclude]):
             if self.debug:
-                Log.debug('{} {} ignored'.format(self.id, event.pathname))
+                Log.debug('{} {} ignored'.format(self.id, path))
             return True
         return False
 
