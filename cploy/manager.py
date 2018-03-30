@@ -53,6 +53,7 @@ class Manager:
 
     def _process_actions(self, actions):
         ''' process all actions in list '''
+        self._check_hashes()
         msg = []
         for action in actions:
             try:
@@ -78,6 +79,7 @@ class Manager:
         if self.debug:
             Log.debug('callback received message: \"{}\"'.format(action))
 
+        self._check_hashes()
         if action == Msg.stop:
             self.stopreq.set()
         elif action == Msg.info:
@@ -103,6 +105,16 @@ class Manager:
         else:
             msg = self._process_actions([action])
         return msg
+
+    def _check_hashes(self):
+        ''' go through task and remove dead ones '''
+        new = []
+        for t in self.lthreads:
+            if not t.thread.is_alive():
+                continue
+            check = t.task.hash()
+            new.append(check)
+        self.hashes = new
 
     def get_info(self):
         ''' return info from all threads '''
@@ -197,7 +209,6 @@ class Manager:
         if check in self.hashes:
             Log.err('sync already being done')
             raise SyncException('duplicate of existing sync')
-        self.hashes.append(check)
 
         Log.log('connecting with sftp')
         sftp = Sftp(task, self.threadid, debug=self.debug)
@@ -205,11 +216,9 @@ class Manager:
             sftp.connect()
         except ConnectionException as e:
             Log.err('error connecting: {}'.format(e.msg))
-            self.hashes.remove(check)
             raise e
         except SyncException as e:
             Log.err('error connecting: {}'.format(e.msg))
-            self.hashes.remove(check)
             raise e
 
         # try to do first sync
@@ -218,8 +227,9 @@ class Manager:
             sftp.close()
             err = 'unable to sync dir'
             Log.err(err)
-            self.hashes.remove(check)
             raise SyncException(err)
+
+        self.hashes.append(check)
 
         # work args
         inq = queue.Queue()
