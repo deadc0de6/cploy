@@ -185,11 +185,24 @@ class Manager:
         ''' save tasks to file '''
         if not self.savefile:
             return
-        with open(self.savefile, 'a') as fd:
-            for cli in clis:
-                fd.write('{}\n'.format(cli))
+        if not clis:
+            return
+        # start by reading the saves
+        saves = []
+        if os.path.exists(self.savefile):
+            with open(self.savefile, 'r') as fd:
+                saves = fd.readlines()
+        # remove empty lines and clean
+        saves = [x.rstrip() for x in saves if x != '\n']
+        # deduplicates saves
+        saves.extend(clis)
+        saves = list(set(saves))
+        # save to file
+        with open(self.savefile, 'w') as fd:
+            for save in saves:
+                fd.write('{}\n'.format(save))
         if clis:
-            Log.log('syncs saved to {}'.format(self.savefile))
+            Log.log('tasks saved to {}'.format(self.savefile))
 
     def _start_com(self):
         ''' start the communication '''
