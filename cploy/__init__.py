@@ -10,12 +10,12 @@ __banner__ = 'cploy'
 __version__ = '0.3.1'
 
 __usage__ = '''
-{0}
+CPLOY
 
 Usage:
-    {0} sync [-dfF] [-p <port>] [-u <user>] [-P <pass>]
-        [-k <key>] [-K <pass>] [-c <cmd>] [-e <pattern>...]
-        <local_path> <hostname> <remote_path>
+    {0} sync [-dfF] <local_path> <hostname> <remote_path>
+             [-p <port>] [-u <user>] [-P <pass>] [-k <key>]
+             [-K <pass>] [-c <cmd>] [-e <pattern>...] [-E <path]
     {0} daemon [-d] (start | stop | restart)
     {0} daemon [-d] (info | ping | debug)
     {0} daemon [-d] unsync <id>
@@ -31,6 +31,7 @@ Options:
     -P --pass=<pass>          SSH password to use.
     -K --keypass=<pass>       SSH private key passphrase.
     -e --exclude=<pattern>    Pattern to exclude using fnmatch.
+    -E --expath=<path>        Load exclude pattern(s) from file.
     -c --command=<cmd>        Command to execute on changes.
     -F --front                Do not daemonize.
     -f --force                Force overwrite on remote [default: False].

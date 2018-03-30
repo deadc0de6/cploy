@@ -194,7 +194,8 @@ def argv_to_str(argv):
     return ' '.join(["'"+a+"'" if ' ' in a else a for a in argv])
 
 
-def fix_path(path):
+def norm_path(path):
+    ''' normalize path '''
     if not path:
         return path
     path = os.path.expanduser(path)
@@ -202,28 +203,44 @@ def fix_path(path):
     return path
 
 
-def fix_args(args):
-    ''' fix local path '''
-    args['<local_path>'] = fix_path(args['<local_path>'])
-    args['--key'] = fix_path(args['--key'])
-    return args
+def exclude_from_file(path):
+    ''' read excludes from file '''
+    ex = []
+    with open(path, 'r') as fd:
+        for line in fd:
+            ex.append(line.rstrip())
+    return ex
 
 
-def get_action(args):
-    ''' return serialized arguments '''
+def enrich_args(args):
+    ''' enrich and fix args '''
+    # fix paths
+    args['<local_path>'] = norm_path(args['<local_path>'])
+    args['--key'] = norm_path(args['--key'])
+    # add command-line arguments
     args['cli'] = argv_to_str(sys.argv[1:]).rstrip()
-    return json.dumps(args)
+    # parse exclude pattern from file
+    if args['--expath']:
+        if not os.path.exists(args['--expath']):
+            Log.err('\"{}\" does not exist'.format(args['--expath']))
+            return None
+        ex = exclude_from_file(args['--expath'])
+        args['--exclude'].extend(ex)
+    del args['--expath']
+    return args
 
 
 def main():
     ''' entry point '''
     ret = True
     args = docopt(USAGE, version=VERSION)
-    args = fix_args(args)
+    args = enrich_args(args)
+    if not args:
+        return False
     front = args['--front']
     debug = args['--debug']
 
-    action = get_action(args)
+    action = json.dumps(args)
     pid = get_pid(PIDPATH)
 
     if not os.path.exists(DIRPATH):

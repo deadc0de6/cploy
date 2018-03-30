@@ -99,43 +99,15 @@ $ cploy daemon start --debug
 
 The daemon's logs are in `/tmp/cploy/cploy.log`.
 
-Add a task to it:
+And add a task to it:
 ```bash
 # sync local dir /tmp/local
 # on host "somehost" under /tmp/remote
 $ cploy sync /tmp/local/ somehost /tmp/remote
 ```
 
-Usage:
-```
-cploy
-
-Usage:
-    cploy sync [-dfF] [-p <port>] [-u <user>] [-P <pass>]
-        [-k <key>] [-K <pass>] [-c <cmd>] [-e <pattern>...]
-        <local_path> <hostname> <remote_path>
-    cploy daemon [-d] (start | stop | restart)
-    cploy daemon [-d] (info | ping | debug)
-    cploy daemon [-d] unsync <id>
-    cploy daemon [-d] resync <id>
-    cploy daemon [-d] resume <path>
-    cploy --help
-    cploy --version
-
-Options:
-    -p --port=<port>          SSH port to use [default: 22].
-    -u --user=<user>          username for SSH [default: $USER].
-    -k --key=<key>            Path of SSH private key to use.
-    -P --pass=<pass>          SSH password to use.
-    -K --keypass=<pass>       SSH private key passphrase.
-    -e --exclude=<pattern>    Pattern to exclude using fnmatch.
-    -c --command=<cmd>        Command to execute on changes.
-    -F --front                Do not daemonize.
-    -f --force                Force overwrite on remote [default: False].
-    -d --debug                Enable debug [default: False].
-    -v --version              Show version.
-    -h --help                 Show this screen.
-```
+That's it. Now every changes made in the `/tmp/local` directory
+will be applied in `/tmp/remote` on *somehost*.
 
 ## Adding a task
 
@@ -211,6 +183,15 @@ Example: exclude any hidden files
 Example: exclude any files containing *test*
 ```
 --exclude '*/test*'
+```
+
+Exclusions pattern can be loaded from a file using the `--expath`
+switch. The file should contain one pattern per line.
+
+For example:
+```
+*/.*
+*/test*
 ```
 
 ## Sync events
