@@ -10,7 +10,7 @@ import queue
 import time
 import json
 import shlex
-from docopt import docopt
+from docopt import docopt, DocoptExit
 
 # local imports
 from cploy.log import Log
@@ -155,17 +155,31 @@ class Manager:
         ''' resume tasks from file '''
         clis = []
         if not path or not os.path.exists(path):
+            err = 'resume path does not exist: \"{}\"'.format(path)
+            Log.err(err)
             return clis
+        Log.log('loading sync from file: \"{}\"'.format(path))
         with open(path, 'r') as fd:
             clis = fd.readlines()
         clis = [l.strip() for l in clis]
         jsons = []
         for cli in clis:
-            args = docopt(USAGE, help=False, argv=shlex.split(cli))
+            Log.log('parsing resuming task: \"{}\"'.format(cli))
+            argv = shlex.split(cli)
+            Log.log('argv: \"{}\"'.format(argv))
+            try:
+                args = docopt(USAGE, help=False, argv=argv)
+            except DocoptExit as e:
+                Log.err('docopt error: {}'.format(e))
+                continue
             args['cli'] = cli
             jsons.append(json.dumps(args))
-        msg = self._process_actions(jsons)
-        return msg
+        if not jsons:
+            err = 'no task to resume'
+            Log.err(err)
+            return err
+        Log.log('resuming {} task(s)'.format(len(jsons)))
+        return self._process_actions(jsons)
 
     def _save(self, clis):
         ''' save tasks to file '''
