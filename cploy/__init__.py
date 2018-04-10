@@ -7,7 +7,7 @@ import sys
 import os
 
 __banner__ = 'cploy'
-__version__ = '0.4'
+__version__ = '0.5'
 
 __usage__ = '''
 CPLOY
