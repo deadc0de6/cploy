@@ -32,7 +32,7 @@ Quick start:
 # install cploy
 sudo pip3 install cploy
 # start the daemon
-cploy daemon start
+cploy start
 # add a directory to sync
 cploy sync /tmp/local someuser@somehost /tmp/remote
 ```
@@ -94,7 +94,7 @@ on a remote path. All synchronizations are done through SSH.
 
 Start the daemon
 ```bash
-$ cploy daemon start --debug
+$ cploy start --debug
 ```
 
 The daemon's logs are in `/tmp/cploy/cploy.log`.
@@ -114,7 +114,7 @@ will be applied in `/tmp/remote` on *somehost*.
 Tasks can be added by using the `sync` command.
 
 After adding a task, make sure to check the daemon to see if the task has
-been added successfully with `cploy daemon info`. In case it wasn't, checking
+been added successfully with `cploy info`. In case it wasn't, checking
 the logs in `/tmp/cploy/cploy.log` usually allows to identify the issue.
 
 Connections to a remote hosts is done using SFTP (SSH). Multiple
@@ -146,8 +146,7 @@ Connection Requirements:
 
 ## Talking with the daemon
 
-A few commands are available to talk to the daemon with the
-`daemon` command:
+A few commands are available to talk to the daemon:
 
 * **start**: start the daemon
 * **stop**: stop the daemon
@@ -166,7 +165,7 @@ Getting information from the daemon allows to see the different task
 running and their id:
 
 ```bash
-$ cploy daemon info
+$ cploy info
 ```
 
 ## File exclusion

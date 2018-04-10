@@ -16,11 +16,11 @@ Usage:
     {0} sync [-dfF] <local_path> <hostname> <remote_path>
              [-p <port>] [-u <user>] [-P <pass>] [-k <key>]
              [-K <pass>] [-c <cmd>] [-e <pattern>...] [-E <path]
-    {0} daemon [-d] (start | stop | restart)
-    {0} daemon [-d] (info | ping | debug)
-    {0} daemon [-d] unsync <id>
-    {0} daemon [-d] resync <id>
-    {0} daemon [-d] resume <path>
+    {0} (start | stop | restart) [-d]
+    {0} (info | ping | debug) [-d]
+    {0} unsync <id> [-d]
+    {0} resync <id> [-d]
+    {0} resume <path> [-d]
     {0} --help
     {0} --version
 

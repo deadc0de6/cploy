@@ -20,7 +20,7 @@ r=`mktemp -d --suffix=.cploy`
 dst="${r}/cploy.canary"
 
 echo "[===] TEST command execution"
-python3 -m cploy.cploy daemon ${opt} start
+python3 -m cploy.cploy ${opt} start
 [ "$?" != "0" ] && echo "ERROR daemon start" && exit 1
 
 sleep 2
@@ -28,7 +28,7 @@ sleep 2
 python3 -m cploy.cploy sync ${opt} ${key} --force ${l} localhost ${r} --command="echo -n test >> ${dst}"
 [ "$?" != "0" ] && echo "ERROR sync" && exit 1
 
-python3 -m cploy.cploy daemon info
+python3 -m cploy.cploy info
 [ "$?" != "0" ] && echo "ERROR daemon info" && exit 1
 
 # change some file to trigger command execution
@@ -38,10 +38,10 @@ sleep 1
 # test remote file is sync'ed
 [ ! -e "${r}/test" ] && get_logs && echo "ERROR file sync" && exit 1
 
-python3 -m cploy.cploy daemon info
+python3 -m cploy.cploy info
 [ "$?" != "0" ] && echo "ERROR daemon info 2" && exit 1
 
-python3 -m cploy.cploy daemon stop
+python3 -m cploy.cploy stop
 [ "$?" != "0" ] && echo "ERROR daemon stop" && exit 1
 
 [ ! -e ${dst} ] && echo "ERROR file not synced" && exit 1

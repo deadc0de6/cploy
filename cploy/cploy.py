@@ -261,7 +261,7 @@ def main():
             else:
                 Log.log('manager already running ... sending new task')
                 daemon_send(action, debug)
-    elif args['daemon']:
+    else:
         ret = daemon_cmd(args, debug)
     return ret
 
