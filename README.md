@@ -240,7 +240,7 @@ calling the command line for each task.
 Issuing the following command will load the tasks from `/tmp/sometasks`
 
 ```bash
-$ cploy daemon resume /tmp/sometasks
+$ cploy resume /tmp/sometasks
 ```
 
 # Contribution
