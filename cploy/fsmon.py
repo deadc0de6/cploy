@@ -131,3 +131,6 @@ class EventHandler(pyinotify.ProcessEvent):
         if self.move_from:
             self.worker.move(self.move_from, event.pathname)
             self.move_from = None
+        else:
+            if os.path.exists(event.pathname):
+                self.worker.mirror(event.pathname)
