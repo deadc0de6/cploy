@@ -66,7 +66,6 @@ class EventHandler(pyinotify.ProcessEvent):
         self.id = self.worker.id
         self.exclude = exclude
         self.debug = debug
-        self.move_from = None
 
     def _ignore(self, path):
         ''' check if this path needs to be ignored '''
@@ -120,7 +119,8 @@ class EventHandler(pyinotify.ProcessEvent):
         ''' first call for moves '''
         if self.debug:
             Log.debug('{} move from: {}'.format(self.id, event.pathname))
-        self.move_from = event.pathname
+        if not os.path.exists(event.pathname):
+            self.worker.delete(event.pathname)
 
     def process_IN_MOVED_TO(self, event):
         ''' second call for moves '''
@@ -128,9 +128,5 @@ class EventHandler(pyinotify.ProcessEvent):
             Log.debug('{} move to: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
-        if self.move_from:
-            self.worker.move(self.move_from, event.pathname)
-            self.move_from = None
-        else:
-            if os.path.exists(event.pathname):
-                self.worker.mirror(event.pathname)
+        if os.path.exists(event.pathname):
+            self.worker.mirror(event.pathname)
