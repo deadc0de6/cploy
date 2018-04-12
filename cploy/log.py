@@ -25,7 +25,7 @@ class Log:
         ''' error '''
         cs = cls._color(cls.RED)
         ce = cls._color(cls.RESET)
-        sys.stderr.write('{}[ERR] {} {}\n'.format(cs, string, ce))
+        sys.stderr.write('{}\n[ERR] {} \n{}\n'.format(cs, string, ce))
 
     @classmethod
     def debug(cls, string):
