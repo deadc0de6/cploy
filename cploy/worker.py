@@ -71,9 +71,9 @@ class Worker:
             if self.debug:
                 Log.debug('th{} worker info'.format(self.id))
             msg = '{} sync \"{}\" to \"{}\" on {}'.format(self.id,
-                                                            self.task.local,
-                                                            self.task.remote,
-                                                            self.task.hostname)
+                                                          self.task.local,
+                                                          self.task.remote,
+                                                          self.task.hostname)
             self.outqueue.put(msg)
         return True
 

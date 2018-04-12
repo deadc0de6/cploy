@@ -75,7 +75,7 @@ class Sftp:
         self.task.remote = self.sftp.normalize(self.task.remote)
         if self.debug:
             Log.debug('th{} rpath adapted to {}'.format(self.id,
-                                                      self.task.remote))
+                                                        self.task.remote))
 
         # change to monitored directory
         if self.debug:
@@ -187,7 +187,9 @@ class Sftp:
     def initsync(self, ldir, rdir):
         ''' sync local directory on remote '''
         if self.debug:
-            Log.debug('th{} initsync dir {} with {}'.format(self.id, ldir, rdir))
+            Log.debug('th{} initsync dir {} with {}'.format(self.id,
+                                                            ldir,
+                                                            rdir))
         try:
             for cur, subd, files in os.walk(ldir):
                 com = os.path.commonpath([ldir, cur])
