@@ -92,13 +92,17 @@ class Manager:
             if id < self.threadid:
                 t = next((x for x in self.lthreads if x.id == id), None)
                 self._stop_thread(t)
-            msg = self.get_info()
-            self.hashes.remove(t.task.hash())
+                msg = self.get_info()
+                self.hashes.remove(t.task.hash())
+            else:
+                msg = 'no such task'
         elif action.startswith(Msg.resync):
             id = int(action.split()[1])
             if id < self.threadid:
                 t = next((x for x in self.lthreads if x.id == id), None)
                 t.queue.put(Msg.resync)
+            else:
+                msg = 'no such task'
         elif action.startswith(Msg.resume):
             path = action.split()[1]
             msg = self._resume(path)
