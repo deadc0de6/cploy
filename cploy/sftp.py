@@ -37,7 +37,7 @@ class Sftp:
     def connect(self):
         ''' connect on remote through sftp '''
         if self.debug:
-            Log.debug('{} initiate connection'.format(self.id))
+            Log.debug('th{} initiate connection'.format(self.id))
         if self.trans and self.trans.is_authenticated():
             return
         if not self._verif_hostkey(self.task.hostname):
@@ -51,7 +51,7 @@ class Sftp:
             self._err(err)
             raise ConnectionException(err)
         if self.debug:
-            Log.debug('{} is authenticated'.format(self.id))
+            Log.debug('th{} is authenticated'.format(self.id))
         self.trans = trans
         self.sftp = paramiko.SFTPClient.from_transport(self.trans)
         if not os.path.exists(self.task.local):
@@ -68,27 +68,27 @@ class Sftp:
 
         if not self.exists(self.task.remote):
             if self.debug:
-                Log.debug('{} create remote directory'.format(self.id))
+                Log.debug('th{} create remote directory'.format(self.id))
             self.mkdirp(self.task.remote)
 
         # adapt remote path with sftp
         self.task.remote = self.sftp.normalize(self.task.remote)
         if self.debug:
-            Log.debug('{} rpath adapted to {}'.format(self.id,
+            Log.debug('th{} rpath adapted to {}'.format(self.id,
                                                       self.task.remote))
 
         # change to monitored directory
         if self.debug:
-            Log.debug('{} chdir to \"{}\"'.format(self.id, self.task.remote))
+            Log.debug('th{} chdir to \"{}\"'.format(self.id, self.task.remote))
         self.sftp.chdir(self.task.remote)
         if self.debug:
-            Log.debug('{} cwd: {}'.format(self.id, self.sftp.normalize('.')))
+            Log.debug('th{} cwd: {}'.format(self.id, self.sftp.normalize('.')))
 
     def _con_key(self):
         ''' connect using provided key '''
         t = paramiko.Transport((self.task.hostname, self.task.port))
         if self.debug:
-            Log.log('{} connecting using key'.format(self.id))
+            Log.log('th{} connecting using key'.format(self.id))
         k = paramiko.RSAKey.from_private_key_file(self.task.key,
                                                   password=self.task.keypass)
         t.connect(username=self.task.username, pkey=k)
@@ -98,7 +98,7 @@ class Sftp:
         ''' connect using provided password '''
         t = paramiko.Transport((self.task.hostname, self.task.port))
         if self.debug:
-            Log.debug('{} connecting using password'.format(self.id))
+            Log.debug('th{} connecting using password'.format(self.id))
         t.connect(username=self.task.username, password=self.task.password)
         return t
 
@@ -107,7 +107,7 @@ class Sftp:
         t = paramiko.Transport((self.task.hostname, self.task.port))
         err = 'ok'
         if self.debug:
-            Log.debug('{} connecting using agent'.format(self.id))
+            Log.debug('th{} connecting using agent'.format(self.id))
         agent = paramiko.agent.Agent()
         keys = agent.get_keys()
         # try all keys
@@ -115,7 +115,7 @@ class Sftp:
             t = paramiko.Transport((self.task.hostname, self.task.port))
             fp = binascii.hexlify(key.get_fingerprint()).decode("utf-8")
             if self.debug:
-                Log.debug('{} trying with key {}'.format(self.id, fp))
+                Log.debug('th{} trying with key {}'.format(self.id, fp))
             try:
                 t.connect(username=self.task.username, pkey=key)
             except paramiko.ssh_exception.SSHException as e:
@@ -155,14 +155,14 @@ class Sftp:
     def _init_files(self, files, ldir, rdir):
         ''' copy multiple files to remote '''
         if self.debug:
-            Log.debug('{} initfiles'.format(self.id))
+            Log.debug('th{} initfiles'.format(self.id))
         for f in files:
             lpath = os.path.join(ldir, f)
             if self._is_excluded(lpath):
                 continue
             rpath = os.path.join(rdir, f)
             if self.debug:
-                Log.log('{} init file: {}'.format(self.id, rpath))
+                Log.log('th{} init file: {}'.format(self.id, rpath))
             if not self.copy(lpath, rpath):
                 return False
         return True
@@ -170,14 +170,14 @@ class Sftp:
     def _init_dirs(self, dirs, ldir, rdir):
         ''' create multiple directories to remote '''
         if self.debug:
-            Log.debug('{} initdirs'.format(self.id))
+            Log.debug('th{} initdirs'.format(self.id))
         for d in dirs:
             lpath = os.path.join(ldir, d)
             if self._is_excluded(lpath):
                 continue
             rpath = os.path.join(rdir, d)
             if self.debug:
-                Log.debug('{} init dir: {}'.format(self.id, rpath))
+                Log.debug('th{} init dir: {}'.format(self.id, rpath))
             if self.exists(rpath):
                 continue
             if not self.mkdir(rpath):
@@ -187,7 +187,7 @@ class Sftp:
     def initsync(self, ldir, rdir):
         ''' sync local directory on remote '''
         if self.debug:
-            Log.debug('{} initsync dir {} with {}'.format(self.id, ldir, rdir))
+            Log.debug('th{} initsync dir {} with {}'.format(self.id, ldir, rdir))
         try:
             for cur, subd, files in os.walk(ldir):
                 com = os.path.commonpath([ldir, cur])
@@ -202,7 +202,7 @@ class Sftp:
                         continue
                     rpath = os.path.join(rcur, sub)
                     if self.debug:
-                        Log.debug('{} init sub: {}'.format(self.id, rpath))
+                        Log.debug('th{} init sub: {}'.format(self.id, rpath))
                     if not self.mkdir(rpath):
                         return False
         except Exception as e:
@@ -212,7 +212,7 @@ class Sftp:
     def _is_excluded(self, path):
         exc = any([fnmatch.fnmatch(path, p) for p in self.task.exclude])
         if self.debug and exc:
-            Log.debug('{} \"{}\" excluded from sync'.format(self.id, path))
+            Log.debug('th{} \"{}\" excluded from sync'.format(self.id, path))
         return exc
 
     def copy(self, lpath, rpath):
@@ -222,11 +222,11 @@ class Sftp:
         d = os.path.dirname(rpath)
         if not self.exists(d):
             if self.debug:
-                Log.debug('{} create remote dir: {}'.format(self.id, d))
+                Log.debug('th{} create remote dir: {}'.format(self.id, d))
             if not self.mkdir(d):
                 return False
         if self.debug:
-            Log.debug('{} copy {} to {}'.format(self.id, lpath, rpath))
+            Log.debug('th{} copy {} to {}'.format(self.id, lpath, rpath))
         try:
             self.sftp.put(lpath, rpath)
             self.chattr(lpath, rpath)
@@ -244,7 +244,7 @@ class Sftp:
     def mkdirp(self, path):
         ''' mkdir -p recursive equivalent '''
         if self.debug:
-            Log.debug('{} mkdir -p {}'.format(self.id, path))
+            Log.debug('th{} mkdir -p {}'.format(self.id, path))
         (head, tail) = os.path.split(path)
         if head and not self.exists(head):
             self.mkdirp(head)
@@ -256,7 +256,7 @@ class Sftp:
         if self.exists(path):
             return True
         if self.debug:
-            Log.debug('{} mkdir {}'.format(self.id, path))
+            Log.debug('th{} mkdir {}'.format(self.id, path))
         try:
             self.sftp.mkdir(path)
         except FileNotFoundError:
@@ -277,11 +277,11 @@ class Sftp:
         try:
             if self.is_dir(path):
                 if self.debug:
-                    Log.debug('{} rm -r {}'.format(self.id, path))
+                    Log.debug('th{} rm -r {}'.format(self.id, path))
                 self.sftp.rmdir(path)
             elif self.is_file(path):
                 if self.debug:
-                    Log.debug('{} rm {}'.format(self.id, path))
+                    Log.debug('th{} rm {}'.format(self.id, path))
                 self.sftp.remove(path)
         except PermissionError as e:
             Log.err('cannot remove file {}: {}'.format(rpath, e))
@@ -298,7 +298,7 @@ class Sftp:
         if not self.exists(rpath):
             return False
         if self.debug:
-            Log.log('{} chattr {}'.format(self.id, rpath))
+            Log.log('th{} chattr {}'.format(self.id, rpath))
         try:
             self.sftp.chmod(rpath, self._get_mode(lpath))
         except PermissionError as e:
@@ -313,7 +313,7 @@ class Sftp:
         if not self.exists(rsrc):
             return True
         if self.debug:
-            Log.debug('{} mv {} {}'.format(self.id, rsrc, rdst))
+            Log.debug('th{} mv {} {}'.format(self.id, rsrc, rdst))
         try:
             self.sftp.rename(rsrc, rdst)
         except PermissionError as e:
@@ -352,7 +352,7 @@ class Sftp:
     def execute(self, cmd):
         ''' execute command on remote through sftp '''
         if self.debug:
-            Log.debug('{} run on remote: \"{}\"'.format(self.id, cmd))
+            Log.debug('th{} run on remote: \"{}\"'.format(self.id, cmd))
         channel = self.trans.open_session()
         # this will execute in default dir (usually $HOME)
         # unless forced using below lines
@@ -361,15 +361,15 @@ class Sftp:
         channel.exec_command(cmd)
         ret = channel.recv_exit_status()
         if self.debug:
-            Log.debug('{} command returned: {}'.format(self.id, ret))
+            Log.debug('th{} command returned: {}'.format(self.id, ret))
         if ret == 0:
             try:
                 data = channel.recv(self.BUFSZ).decode()
-                Log.log('{} command stdout: \n{}'.format(self.id, data))
+                Log.log('th{} command stdout: \n{}'.format(self.id, data))
             except socket.timeout as e:
                 pass
         else:
-            Log.log('{} command returned error: {}'.format(self.id, ret))
+            Log.log('th{} command returned error: {}'.format(self.id, ret))
         channel.close()
         return True
 
@@ -384,9 +384,9 @@ class Sftp:
     # utils
     ###########################################################
     def _log(self, msg):
-        msg = '[{}] {}'.format(self.id, msg)
+        msg = 'th{} {}'.format(self.id, msg)
         Log.log(msg)
 
     def _err(self, msg):
-        msg = '[{}] {}'.format(self.id, msg)
+        msg = 'th{} {}'.format(self.id, msg)
         Log.err(msg)

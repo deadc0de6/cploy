@@ -41,8 +41,8 @@ class Fsmon:
         self.wdd = self.wm.add_watch(local, self.mask,
                                      rec=True, auto_add=True)
         if self.debug:
-            Log.debug('[{}] adding watch on {}'.format(self.id, local))
-        Log.log('[{}] filesystem monitoring started'.format(self.id))
+            Log.debug('th{} adding watch on {}'.format(self.id, local))
+        Log.log('th{} filesystem monitoring started'.format(self.id))
         self.started = True
         return self.started
 
@@ -55,7 +55,7 @@ class Fsmon:
         # stop the notifier
         self.notifier.stop()
         self.started = False
-        Log.log('[{}] filesystem monitoring stopped'.format(self.id))
+        Log.log('th{} filesystem monitoring stopped'.format(self.id))
         return True
 
 
@@ -73,7 +73,7 @@ class EventHandler(pyinotify.ProcessEvent):
             return False
         if any([fnmatch.fnmatch(path, p) for p in self.exclude]):
             if self.debug:
-                Log.debug('{} {} ignored'.format(self.id, path))
+                Log.debug('th{} {} ignored'.format(self.id, path))
             return True
         return False
 
@@ -83,7 +83,7 @@ class EventHandler(pyinotify.ProcessEvent):
             # only process directory creation
             return
         if self.debug:
-            Log.debug('{} creating: {}'.format(self.id, event.pathname))
+            Log.debug('th{} creating: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if os.path.exists(event.pathname):
@@ -92,7 +92,7 @@ class EventHandler(pyinotify.ProcessEvent):
     def process_IN_DELETE(self, event):
         ''' something was deleted '''
         if self.debug:
-            Log.debug('{} removing: {}'.format(self.id, event.pathname))
+            Log.debug('th{} removing: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         self.worker.delete(event.pathname)
@@ -100,7 +100,7 @@ class EventHandler(pyinotify.ProcessEvent):
     def process_IN_ATTRIB(self, event):
         ''' some attribute changed '''
         if self.debug:
-            Log.debug('{} attrib: {}'.format(self.id, event.pathname))
+            Log.debug('th{} attrib: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if os.path.exists(event.pathname):
@@ -109,7 +109,7 @@ class EventHandler(pyinotify.ProcessEvent):
     def process_IN_CLOSE_WRITE(self, event):
         ''' was written to '''
         if self.debug:
-            Log.debug('{} close-write: {}'.format(self.id, event.pathname))
+            Log.debug('th{} close-write: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if os.path.exists(event.pathname):
@@ -118,14 +118,14 @@ class EventHandler(pyinotify.ProcessEvent):
     def process_IN_MOVED_FROM(self, event):
         ''' first call for moves '''
         if self.debug:
-            Log.debug('{} move from: {}'.format(self.id, event.pathname))
+            Log.debug('th{} move from: {}'.format(self.id, event.pathname))
         if not os.path.exists(event.pathname):
             self.worker.delete(event.pathname)
 
     def process_IN_MOVED_TO(self, event):
         ''' second call for moves '''
         if self.debug:
-            Log.debug('{} move to: {}'.format(self.id, event.pathname))
+            Log.debug('th{} move to: {}'.format(self.id, event.pathname))
         if self._ignore(event.pathname):
             return
         if os.path.exists(event.pathname):

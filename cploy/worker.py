@@ -28,17 +28,17 @@ class Worker:
 
     def _log(self, msg):
         ''' log with thread info '''
-        Log.log('[{}] {}'.format(self.id, msg))
+        Log.log('th{} {}'.format(self.id, msg))
 
     def _err(self, msg):
         ''' log with thread info '''
-        Log.err('[{}] {}'.format(self.id, msg))
+        Log.err('th{} {}'.format(self.id, msg))
 
     def start(self, stopreq):
         ''' start syncing through filesystem monitoring '''
         self.mon = Fsmon(self, exclude=self.task.exclude, debug=self.debug)
         if not self.mon.start():
-            err = '[{}] monitoring filesystem failed'.format(self.id)
+            err = 'th{} monitoring filesystem failed'.format(self.id)
             self.err(err)
             self.mon.stop()
             self.sftp.close()
@@ -56,21 +56,21 @@ class Worker:
         ''' process command received '''
         if cmd == Msg.stop:
             if self.debug:
-                Log.debug('{} worker stopping'.format(self.id))
+                Log.debug('th{} worker stopping'.format(self.id))
             return False
         if cmd == Msg.debug:
             if self.debug:
-                Log.debug('{} worker toggle debug'.format(self.id))
+                Log.debug('th{} worker toggle debug'.format(self.id))
             self.debug = not self.debug
             return True
         if cmd == Msg.resync:
             if self.debug:
-                Log.debug('{} worker resync'.format(self.id))
+                Log.debug('th{} worker resync'.format(self.id))
             self.sftp.initsync(self.task.local, self.task.remote)
         elif cmd == Msg.info:
             if self.debug:
-                Log.debug('{} worker info'.format(self.id))
-            msg = '[{}] sync \"{}\" to \"{}\" on {}'.format(self.id,
+                Log.debug('th{} worker info'.format(self.id))
+            msg = '{} sync \"{}\" to \"{}\" on {}'.format(self.id,
                                                             self.task.local,
                                                             self.task.remote,
                                                             self.task.hostname)
