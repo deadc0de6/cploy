@@ -8,6 +8,7 @@ import os
 import paramiko
 import binascii
 import stat
+import fnmatch
 
 # local imports
 from cploy.log import Log
@@ -153,8 +154,12 @@ class Sftp:
     ###########################################################
     def _init_files(self, files, ldir, rdir):
         ''' copy multiple files to remote '''
+        if self.debug:
+            Log.debug('{} initfiles'.format(self.id))
         for f in files:
             lpath = os.path.join(ldir, f)
+            if self._is_excluded(lpath):
+                continue
             rpath = os.path.join(rdir, f)
             if self.debug:
                 Log.log('{} init file: {}'.format(self.id, rpath))
@@ -164,8 +169,12 @@ class Sftp:
 
     def _init_dirs(self, dirs, ldir, rdir):
         ''' create multiple directories to remote '''
+        if self.debug:
+            Log.debug('{} initdirs'.format(self.id))
         for d in dirs:
             lpath = os.path.join(ldir, d)
+            if self._is_excluded(lpath):
+                continue
             rpath = os.path.join(rdir, d)
             if self.debug:
                 Log.debug('{} init dir: {}'.format(self.id, rpath))
@@ -178,7 +187,7 @@ class Sftp:
     def initsync(self, ldir, rdir):
         ''' sync local directory on remote '''
         if self.debug:
-            Log.debug('{} sync dir {} with {}'.format(self.id, ldir, rdir))
+            Log.debug('{} initsync dir {} with {}'.format(self.id, ldir, rdir))
         try:
             for cur, subd, files in os.walk(ldir):
                 com = os.path.commonpath([ldir, cur])
@@ -188,6 +197,9 @@ class Sftp:
                 if not self._init_dirs(subd, cur, rcur):
                     return False
                 for sub in subd:
+                    lsub = os.path.join(cur, sub)
+                    if self._is_excluded(lsub):
+                        continue
                     rpath = os.path.join(rcur, sub)
                     if self.debug:
                         Log.debug('{} init sub: {}'.format(self.id, rpath))
@@ -196,6 +208,12 @@ class Sftp:
         except Exception as e:
             raise SyncException('initsync: {}'.format(e))
         return True
+
+    def _is_excluded(self, path):
+        exc = any([fnmatch.fnmatch(path, p) for p in self.task.exclude])
+        if self.debug and exc:
+            Log.debug('{} \"{}\" excluded from sync'.format(self.id, path))
+        return exc
 
     def copy(self, lpath, rpath):
         ''' copy file to the remote '''
