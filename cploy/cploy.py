@@ -29,6 +29,7 @@ from .message import Message as Msg
 DIRPATH = '/tmp/{}'.format(BANNER)
 PIDPATH = '{}/{}.pid'.format(DIRPATH, BANNER)
 LOGPATH = '{}/{}.log'.format(DIRPATH, BANNER)
+ERRPATH = '{}/{}.err'.format(DIRPATH, BANNER)
 SAVPATH = '{}/{}.save'.format(DIRPATH, BANNER)
 SPATH = '{}/{}.socket'.format(DIRPATH, BANNER)
 MAXWAIT = 15  # seconds
@@ -59,6 +60,7 @@ def daemon_send(data, debug, quiet=False):
         Log.log(msg)
         if msg == Msg.error:
             Log.log('check the daemon logs under \"{}\"'.format(LOGPATH))
+            Log.log('check the daemon erro under \"{}\"'.format(ERRPATH))
     return True
 
 
@@ -134,7 +136,7 @@ def daemonize(args, debug, actions=[]):
     if pid:
         Log.log('daemon already running (pid: {})'.format(pid))
         return
-    Log.log('daemon started, logging to {}'.format(LOGPATH))
+    Log.log('daemon started, logging to {} and {}'.format(LOGPATH, ERRPATH))
     context = get_context(debug)
     try:
         context.open()
@@ -175,7 +177,7 @@ def get_pid(path):
 def get_context(debug):
     ''' return daemon context '''
     sysout = open(LOGPATH, 'a')
-    syserr = open(LOGPATH, 'a')
+    syserr = open(ERRPATH, 'a')
     pf = pidlockfile.PIDLockFile(PIDPATH, threaded=False)
     context = daemon.DaemonContext(
             signal_map={

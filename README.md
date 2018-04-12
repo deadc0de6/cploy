@@ -98,6 +98,7 @@ $ cploy start --debug
 ```
 
 The daemon's logs are in `/tmp/cploy/cploy.log`.
+Debug logs and errors are written to `/tmp/cploy/cploy.err`.
 
 And add a task to it:
 ```bash
@@ -115,7 +116,7 @@ Tasks can be added by using the `sync` command.
 
 After adding a task, make sure to check the daemon to see if the task has
 been added successfully with `cploy info`. In case it wasn't, checking
-the logs in `/tmp/cploy/cploy.log` usually allows to identify the issue.
+the logs in `/tmp/cploy/cploy.{log,err}` usually allows to identify the issue.
 
 Connections to a remote hosts is done using SFTP (SSH). Multiple
 connection options can be applied: connection with password, with SSH keys, using
