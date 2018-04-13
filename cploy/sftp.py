@@ -232,11 +232,11 @@ class Sftp:
         try:
             self.sftp.put(lpath, rpath)
             self.chattr(lpath, rpath)
-        except FileNotFoundError:
-            Log.err('cannot create file {}'.format(rpath))
+        except FileNotFoundError as e:
+            Log.err('copy cannot create file {}: {}'.format(rpath, e))
             return False
         except PermissionError as e:
-            Log.err('cannot create file {}: {}'.format(rpath, e))
+            Log.err('copy cannot create file {}: {}'.format(rpath, e))
             return False
         except OSError as e:
             Log.err('socket error: {}'.format(e))
@@ -265,7 +265,7 @@ class Sftp:
             Log.err('cannot create dir \"{}\"'.format(path))
             return False
         except PermissionError as e:
-            Log.err('cannot create file {}: {}'.format(rpath, e))
+            Log.err('mkdir cannot create file {}: {}'.format(rpath, e))
             return False
         except OSError as e:
             Log.err('socket error: {}'.format(e))
@@ -304,7 +304,7 @@ class Sftp:
         try:
             self.sftp.chmod(rpath, self._get_mode(lpath))
         except PermissionError as e:
-            Log.err('cannot create file {}: {}'.format(rpath, e))
+            Log.err('chattr cannot create file {}: {}'.format(rpath, e))
             return False
         except OSError as e:
             Log.err('socket error: {}'.format(e))
@@ -319,7 +319,7 @@ class Sftp:
         try:
             self.sftp.rename(rsrc, rdst)
         except PermissionError as e:
-            Log.err('cannot create file {}: {}'.format(rpath, e))
+            Log.err('mv cannot create file {}: {}'.format(rpath, e))
             return False
         except OSError as e:
             Log.err('socket error: {}'.format(e))
