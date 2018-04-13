@@ -212,8 +212,11 @@ class Sftp:
         return True
 
     def _is_excluded(self, path):
+        if not self.task.exclude:
+            # ignore if no exclude pattern
+            return False
         exc = any([fnmatch.fnmatch(path, p) for p in self.task.exclude])
-        if self.debug and exc:
+        if exc and self.debug:
             Log.debug('th{} \"{}\" excluded from sync'.format(self.id, path))
         return exc
 
