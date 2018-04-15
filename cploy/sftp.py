@@ -119,6 +119,8 @@ class Sftp:
             try:
                 t.connect(username=self.task.username, pkey=key)
             except paramiko.ssh_exception.SSHException as e:
+                if self.debug:
+                    Log.debug('th{} key {} failed'.format(self.id, fp))
                 continue
             if t.is_authenticated():
                 break
@@ -264,11 +266,11 @@ class Sftp:
             Log.debug('th{} mkdir {}'.format(self.id, path))
         try:
             self.sftp.mkdir(path)
-        except FileNotFoundError:
-            Log.err('cannot create dir \"{}\"'.format(path))
+        except FileNotFoundError as e:
+            Log.err('cannot create dir \"{}\": {}'.format(path, e))
             return False
         except PermissionError as e:
-            Log.err('mkdir cannot create file {}: {}'.format(rpath, e))
+            Log.err('cannot create dir \"{}\": {}'.format(rpath, e))
             return False
         except OSError as e:
             Log.err('socket error: {}'.format(e))
@@ -348,6 +350,7 @@ class Sftp:
         try:
             self.sftp.stat(path)
         except IOError:
+            # ok that proves it doesn't exist
             return False
         except OSError as e:
             Log.err('socket error: {}'.format(e))
