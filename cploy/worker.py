@@ -28,11 +28,7 @@ class Worker:
 
     def _log(self, msg):
         ''' log with thread info '''
-        Log.log('th{} {}'.format(self.id, msg))
-
-    def _err(self, msg):
-        ''' log with thread info '''
-        Log.err('th{} {}'.format(self.id, msg))
+        Log.log('worker-th{} {}'.format(self.id, msg))
 
     def start(self, stopreq):
         ''' start syncing through filesystem monitoring '''

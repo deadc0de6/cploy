@@ -42,13 +42,13 @@ class Sftp:
             return
         if not self._verif_hostkey(self.task.hostname):
             err = 'hostkey verification failed'
-            self._err(err)
+            Log.err('{} {}'.format(self.id, err))
             raise ConnectionException(err)
         trans = self._connect()
         if not trans.is_authenticated():
             self.close()
             err = 'cannot authenticate'
-            self._err(err)
+            Log.err('{} {}'.format(self.id, err))
             raise ConnectionException(err)
         if self.debug:
             Log.debug('th{} is authenticated'.format(self.id))
@@ -57,13 +57,13 @@ class Sftp:
         if not os.path.exists(self.task.local):
             self.close()
             err = 'local path does not exist'
-            self._err(err)
+            Log.err('{} {}'.format(self.id, err))
             raise SyncException(err)
 
         if self.exists(self.task.remote) and not self.task.force:
             self.close()
             err = 'remote path exists (use --force)'
-            self._err(err)
+            Log.err('{} {}'.format(self.id, err))
             raise SyncException(err)
 
         if not self.exists(self.task.remote):
@@ -303,7 +303,7 @@ class Sftp:
         if not self.exists(rpath):
             return False
         if self.debug:
-            Log.log('th{} chattr {}'.format(self.id, rpath))
+            Log.debug('th{} chattr {}'.format(self.id, rpath))
         try:
             self.sftp.chmod(rpath, self._get_mode(lpath))
         except PermissionError as e:
@@ -384,14 +384,3 @@ class Sftp:
     def _get_mode(self, lpath):
         '''' return attrib of local file '''
         return os.stat(lpath).st_mode
-
-    ###########################################################
-    # utils
-    ###########################################################
-    def _log(self, msg):
-        msg = 'th{} {}'.format(self.id, msg)
-        Log.log(msg)
-
-    def _err(self, msg):
-        msg = 'th{} {}'.format(self.id, msg)
-        Log.err(msg)
