@@ -65,21 +65,21 @@ $ cploy --help
 
 Or from github directly
 ```bash
-$ cd /tmp; git clone https://github.com/deadc0de6/cploy && cd cploy
+$ cd /tmp; git clone https://github.com/deadc0de6/cploy cploy-git && cd cploy-git
 $ sudo python3 setup.py install
 $ cploy --help
 ```
 
 To work with *cploy* without installing it, you can do the following
 ```bash
-$ cd /tmp; git clone https://github.com/deadc0de6/cploy && cd cploy
+$ cd /tmp; git clone https://github.com/deadc0de6/cploy cploy-git && cd cploy-git
 $ sudo pip3 install -r requirements.txt
 $ python3 -m cploy.cploy --help
 ```
 
 or install it in a virtualenv
 ```bash
-$ cd /tmp; git clone https://github.com/deadc0de6/cploy && cd cploy
+$ cd /tmp; git clone https://github.com/deadc0de6/cploy cploy-git && cd cploy-git
 $ virtualenv -p python3 env
 $ source env/bin/activate
 $ python setup.py install
