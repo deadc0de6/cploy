@@ -263,7 +263,7 @@ def main():
                 ret = daemonize(args, debug, actions=[action])
             else:
                 Log.log('manager already running ... sending new task')
-                daemon_send(action, debug)
+                ret = daemon_send(action, debug)
     else:
         ret = daemon_cmd(args, debug)
     return ret
