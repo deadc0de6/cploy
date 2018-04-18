@@ -102,7 +102,7 @@ def daemon_cmd(args, debug):
         msg = '{} {}'.format(Msg.resync, id)
         ret = daemon_send(msg, debug)
     elif args['resume']:
-        path = args['<path>']
+        path = norm_path(args['<path>'])
         if not os.path.exists(path):
             Log.err('path \"{}\" does not exist'.format(path))
             return False
@@ -223,10 +223,11 @@ def enrich_args(args):
     args['cli'] = argv_to_str(sys.argv[1:]).rstrip()
     # parse exclude pattern from file
     if args['--expath']:
-        if not os.path.exists(args['--expath']):
-            Log.err('\"{}\" does not exist'.format(args['--expath']))
+        expath = norm_path(args['--expath'])
+        if not os.path.exists(expath):
+            Log.err('\"{}\" does not exist'.format(expath))
             return None
-        ex = exclude_from_file(args['--expath'])
+        ex = exclude_from_file(expath)
         args['--exclude'].extend(ex)
     del args['--expath']
     return args
