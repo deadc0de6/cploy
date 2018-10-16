@@ -10,6 +10,7 @@ import queue
 import time
 import json
 import shlex
+import string
 from docopt import docopt, DocoptExit
 
 # local imports
@@ -58,7 +59,6 @@ class Manager:
         for action in actions:
             try:
                 action = json.loads(action)
-                print(action)
                 if not action:
                     continue
                 if self.debug:
@@ -155,6 +155,15 @@ class Manager:
         for t in self.lthreads:
             t.queue.put(Msg.debug)
 
+    def _edit_resumes(self, argv, path):
+        '''edit the command live'''
+        if argv[0] == 'sync':
+            if argv[1] == '.':
+                argv[1] = os.path.dirname(path)
+            else:
+                argv[1] = string.Template(argv[1]).substitute(os.environ)
+        return argv
+
     def _resume(self, path):
         ''' resume tasks from file '''
         clis = []
@@ -171,6 +180,8 @@ class Manager:
             Log.log('parsing resuming task: \"{}\"'.format(cli))
             argv = shlex.split(cli)
             Log.log('argv: \"{}\"'.format(argv))
+            argv = self._edit_resumes(argv, path)
+            Log.log('argv after edit: \"{}\"'.format(argv))
             try:
                 args = docopt(USAGE, help=False, argv=argv)
             except DocoptExit as e:
