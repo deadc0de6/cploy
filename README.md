@@ -244,6 +244,9 @@ Issuing the following command will load the tasks from `/tmp/sometasks`
 $ cploy resume /tmp/sometasks
 ```
 
+Note that `sync` commands loaded from file get environment variables
+(and relative path) expanded.
+
 # Contribution
 
 If you are having trouble installing or using *cploy*, open an issue.

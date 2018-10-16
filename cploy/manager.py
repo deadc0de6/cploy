@@ -162,6 +162,7 @@ class Manager:
                 argv[1] = os.path.dirname(path)
             else:
                 argv[1] = string.Template(argv[1]).substitute(os.environ)
+            argv[1] = os.path.abspath(argv[1])
         return argv
 
     def _resume(self, path):
